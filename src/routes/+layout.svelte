@@ -1,0 +1,16 @@
+<script>
+    import "../app.css";
+</script>
+
+<nav class="bg-blue-500 flex gap-x-10 pl-3.5">
+    <a href="/">Home</a>
+    <a href="/registration">registration</a>
+    <a href="/registration/ekyc">ekyc</a>
+    <a href="/registration/complete_profile">complete profile </a>
+    <a href="/dashboard">dashboard </a>
+    <a href="/dashboard/vipdarshan">vip darshan </a>
+    <a href="/mybooking">My Booking </a>
+    <a href="/darshan_management">Darshan Management </a>
+</nav>
+
+<slot />
