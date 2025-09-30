@@ -5,17 +5,20 @@
     export type Protocol = {
         value: string;
         label: string;
-        fee: number; // per person
+        fee: number;
+    };
+
+    type SubmitEvent = {
+        protocol?: Protocol;
+        visitDate?: string;
+        primaryDevotee: string;
+        companions: string[];
+        total: number;
+        slot?: string;
     };
 
     type Events = {
-        submit: {
-            protocol?: Protocol;
-            visitDate?: string; // yyyy-mm-dd
-            primaryDevotee: string;
-            companions: string[];
-            total: number;
-        };
+        submit: SubmitEvent;
         back: void;
         addCompanion: void;
     };
@@ -45,49 +48,59 @@
     export let maxCompanions = 10;
 
     // ----- Local state -----
-    let selectedProtocolValue: string = "";
-    let companions: string[] = []; // simple names list
-    let visitDate = ""; // yyyy-mm-dd
+    let selectedProtocolValue = "";
+    let companions: string[] = [];
+    let visitDate = "";
+    let selectedSlot = "";
 
-    // ----- Derived / helpers -----
+    // Time-slots (mock data)
+    type Slot = { time: string; seats: number };
+    let slots: Slot[] = [
+        { time: "08:00 AM", seats: 9 },
+        { time: "09:30 AM", seats: 29 },
+        { time: "11:00 AM", seats: 24 },
+        { time: "01:00 PM", seats: 42 },
+        { time: "03:00 PM", seats: 5 },
+        { time: "04:30 PM", seats: 36 },
+    ];
+
+    // ----- Derived -----
     const inr = new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
         maximumFractionDigits: 0,
     });
 
-    function selectedProtocol(): Protocol | undefined {
-        return protocols.find((p) => p.value === selectedProtocolValue);
-    }
+    const selectedProtocol = () =>
+        protocols.find((p) => p.value === selectedProtocolValue);
 
     $: feePerPerson = selectedProtocol()?.fee ?? 0;
-    $: total = feePerPerson * (1 + companions.length); // primary + companions
+    $: total = feePerPerson * (1 + companions.length);
 
     $: invalid =
-        !selectedProtocolValue || !visitDate
-            ? "Please fill all required fields and select a protocol."
+        !selectedProtocolValue || !visitDate || !selectedSlot
+            ? "Please fill all required fields, select a protocol and a time slot."
             : "";
 
     // ----- Actions -----
-    function addCompanion() {
-        if (companions.length >= maxCompanions) return;
-        companions = [...companions, ""];
-        dispatch("addCompanion");
-    }
+    const addCompanion = () => {
+        if (companions.length < maxCompanions) {
+            companions = [...companions, ""];
+            dispatch("addCompanion");
+        }
+    };
 
-    function removeCompanion(index: number) {
+    const removeCompanion = (index: number) => {
         companions = companions.filter((_, i) => i !== index);
-    }
+    };
 
-    function updateCompanion(index: number, name: string) {
-        companions = companions.map((c, i) => (i === index ? name : c));
-    }
+    const updateCompanion = (index: number, name: string) => {
+        companions[index] = name;
+    };
 
-    function back() {
-        dispatch("back");
-    }
+    const back = () => dispatch("back");
 
-    function submit() {
+    const submit = () => {
         if (invalid) return;
         dispatch("submit", {
             protocol: selectedProtocol(),
@@ -95,8 +108,9 @@
             primaryDevotee,
             companions: companions.filter(Boolean),
             total,
+            slot: selectedSlot,
         });
-    }
+    };
 </script>
 
 <div class="page">
@@ -204,6 +218,36 @@
                 aria-invalid={!visitDate ? "true" : "false"}
             />
             <span class="calendar" aria-hidden="true">📅</span>
+        </div>
+
+        <!-- AVAILABLE SLOTS -->
+        <div class="slots-wrap">
+            <div class="slots-head">
+                <div class="label mb0">Available Slots</div>
+                <div class="muted small">Please select a time slot below.</div>
+            </div>
+            <div
+                class="slots-grid"
+                role="listbox"
+                aria-label="Available time slots"
+            >
+                {#each slots as s}
+                    <button
+                        type="button"
+                        class="slot-btn {selectedSlot === s.time
+                            ? 'selected'
+                            : ''} {s.seats === 0 ? 'disabled' : ''}"
+                        aria-pressed={selectedSlot === s.time}
+                        aria-disabled={s.seats === 0}
+                        on:click={() =>
+                            (selectedSlot =
+                                s.seats === 0 ? selectedSlot : s.time)}
+                    >
+                        <div class="slot-time">{s.time}</div>
+                        <div class="slot-seats">{s.seats} Seats</div>
+                    </button>
+                {/each}
+            </div>
         </div>
 
         <!-- Fees & Total -->
@@ -374,6 +418,61 @@
         transform: translateY(-50%);
         pointer-events: none;
         opacity: 0.7;
+    }
+
+    /* SLOTS */
+    .slots-wrap {
+        margin-top: 12px;
+    }
+    .slots-head {
+        display: grid;
+        gap: 4px;
+    }
+    .slots-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 8px;
+    }
+    .slot-btn {
+        display: grid;
+        gap: 6px;
+        align-content: center;
+        justify-items: center;
+        height: 66px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        cursor: pointer;
+        transition:
+            box-shadow 0.15s ease,
+            border-color 0.15s ease,
+            transform 0.02s ease;
+    }
+    .slot-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(33, 81, 234, 0.15);
+        border-color: #2151ea;
+    }
+    .slot-btn:active {
+        transform: translateY(1px);
+    }
+    .slot-btn.selected {
+        border-color: #2151ea;
+        box-shadow: 0 0 0 3px rgba(33, 81, 234, 0.15);
+    }
+    .slot-btn.disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+    .slot-time {
+        font-weight: 800;
+        font-size: 18px;
+        color: #111827;
+    }
+    .slot-seats {
+        font-size: 12px;
+        color: #059669;
     }
 
     .fee-line {

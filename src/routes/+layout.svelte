@@ -14,6 +14,8 @@
 
     <a href="/dashboard/mybooking">My Booking </a>
     <a href="/darshan_management">Darshan Management </a>
+    <a href="/attender">attender </a>
+
     <a href="/registration/login">login</a>
 </nav>
 
