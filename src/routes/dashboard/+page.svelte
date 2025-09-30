@@ -34,13 +34,13 @@
     ];
 
     interface ProfileDetails {
-        devotee_name?: string;
+        devoteee_name?: string;
         is_ekyc_complete?: number;
         [key: string]: any;
     }
 
-    let devotee_details: ProfileDetails | null = null;
-    let devotee_name = "";
+    let devoteee_details: ProfileDetails | null = null;
+    let devoteee_name = "";
 
     export let title = "Dashboard";
     export let welcome = "Welcome back!";
@@ -68,8 +68,10 @@
             if (!res.ok) throw new Error("Network response was not ok");
 
             const data = await res.json();
-            devotee_details = data.message;
-            devotee_name = data.message.devotee_name ?? "";
+            devoteee_details = data.message;
+            devoteee_name = data.message.devoteee_name || "";
+
+            console.log(data.message);
         } catch (err) {
             console.error("Error fetching profile details:", err);
         }
@@ -86,10 +88,12 @@
             <h1 class="title">{title}</h1>
             <p class="subtitle">
                 {welcome}
-                {#if devotee_details?.devotee_name}{devotee_details?.devotee_name}{/if}
+                {#if devoteee_details?.devoteee_name}
+                    {devoteee_details?.devoteee_name}
+                {/if}
             </p>
 
-            {#if devotee_details?.is_ekyc_complete == 0}
+            {#if devoteee_details?.is_ekyc_complete == 0}
                 <button
                     class="btn danger bg-orange-400"
                     on:click={complete_kyc}
@@ -110,7 +114,7 @@
             {/each}
         </div>
 
-        <button class="logout" on:click={() => dispatch("logout")}>
+        <button class="logout" on:click={() => goto("/registration/login")}>
             Logout
         </button>
     </div>
