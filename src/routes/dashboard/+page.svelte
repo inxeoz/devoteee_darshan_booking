@@ -2,6 +2,8 @@
     import { createEventDispatcher } from "svelte";
     import { onMount, onDestroy } from "svelte";
 
+    import { getCookieByName } from "../../helper.js";
+
     const dispatch = createEventDispatcher();
 
     export let title = "Dashboard";
@@ -25,7 +27,7 @@
     }
 
     onMount(() => {
-        console.log("Component mounted!");
+        console.log(getCookieByName("auth_token"));
 
         getProfileDetails();
         // You can also return a cleanup function here (like onDestroy).
@@ -41,7 +43,7 @@
                 {
                     method: "GET",
                     headers: {
-                        auth_token: "18ad6b1e9144a9069024092cfc2e47d0",
+                        auth_token: getCookieByName("auth_token") || "",
                     },
                 },
             );
