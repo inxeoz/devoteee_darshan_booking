@@ -61,7 +61,6 @@
     let visitDate = "";
     let selectedSlot = "";
     let authorityLetterFile: File | null = null;
-    let protocolRank = ""; // maps to protocol_rank in payload
     let saveAsDraft = true;
 
     // API / UI state
@@ -98,14 +97,6 @@
         !selectedProtocolValue || !visitDate || !selectedSlot
             ? "Please fill all required fields, select a protocol and a time slot."
             : "";
-
-    // ----- Lifecycle -----
-    onMount(() => {
-        // default protocolRank to selectedProtocol label when protocol changes
-        $: if (selectedProtocol()) {
-            protocolRank = selectedProtocol()?.label ?? "";
-        }
-    });
 
     // ----- Actions -----
     const addCompanion = () => {
@@ -156,7 +147,7 @@
         errorMessage = "";
         if (invalid) return;
 
-        // validate companions: require name and phone (phone optional? but your API includes phone)
+        // validate companions: require name (phone optional here)
         const validCompanions = companions
             .filter((c) => c.companion_name && c.companion_name.trim())
             .map((c) => ({
@@ -165,13 +156,13 @@
                 companion_gender: c.companion_gender || "male",
             }));
 
-        // Build payload similar to your curl example
+        // Build payload; use selectedProtocol label as protocol_rank
         const payload = {
             details: {
                 darshan_date: visitDate, // expected "YYYY-MM-DD"
                 darshan_time: slotTimeTo24hr(selectedSlot), // "HH:MM"
                 darshan_with_protocol: 1, // set 1 to indicate protocol
-                protocol_rank: protocolRank || selectedProtocol()?.label || "",
+                protocol_rank: selectedProtocol()?.label || "",
                 government_authority_letter: authorityLetterFile
                     ? authorityLetterFile.name
                     : "", // filename only
@@ -209,7 +200,7 @@
             }
 
             const data = await res.json().catch(() => null);
-            successMessage = "Booking created successfully.";
+            successMessage = "Appointment application submitted successfully.";
             // dispatch submit for parent handlers
             dispatch("submit", {
                 protocol: selectedProtocol(),
@@ -222,13 +213,13 @@
 
             // optionally show response details
             if (data && data.booking_id) {
-                successMessage += ` Booking ID: ${data.booking_id}`;
+                successMessage += ` Application ID: ${data.booking_id}`;
             }
         } catch (err: any) {
             console.error(err);
             errorMessage = err?.message
                 ? String(err.message)
-                : "Failed to create booking.";
+                : "Failed to submit application.";
         } finally {
             loading = false;
         }
@@ -288,22 +279,12 @@
             class="input"
             bind:value={selectedProtocolValue}
             aria-invalid={!selectedProtocolValue ? "true" : "false"}
-            on:change={() => (protocolRank = selectedProtocol()?.label ?? "")}
         >
             <option value="" disabled selected>Select Protocol</option>
             {#each protocols as p}
                 <option value={p.value}>{p.label}</option>
             {/each}
         </select>
-
-        <!-- Protocol Rank (editable) -->
-        <label class="label">Protocol Rank (editable)</label>
-        <input
-            class="input"
-            type="text"
-            bind:value={protocolRank}
-            placeholder="e.g. Chief Minister (of State)"
-        />
 
         <!-- Companions -->
         <div class="row-between">
@@ -445,14 +426,6 @@
             </div>
         </div>
 
-        <!-- Fees & Total -->
-        <p class="fee-line">
-            Protocol Fee per person: <span class="strong"
-                >{inr.format(feePerPerson)}</span
-            >
-        </p>
-        <h3 class="total">Total Payable: <span>{inr.format(total)}</span></h3>
-
         {#if invalid}
             <p class="error">{invalid}</p>
         {/if}
@@ -465,13 +438,14 @@
             <p class="success small">{successMessage}</p>
         {/if}
 
+        <!-- Apply button -->
         <button
             class="btn primary xl"
             type="button"
             on:click={submitBooking}
             disabled={loading}
         >
-            {#if loading}Processing...{:else}Complete Booking{/if}
+            {#if loading}Processing...{:else}Apply For Appointment{/if}
         </button>
     </div>
 </div>
@@ -692,20 +666,6 @@
     .slot-seats {
         font-size: 12px;
         color: #059669;
-    }
-
-    .fee-line {
-        text-align: center;
-        margin: 12px 0 0;
-        color: #4b5563;
-        font-size: 14px;
-    }
-    .total {
-        text-align: center;
-        margin: 6px 0 0;
-        font-size: 20px;
-        font-weight: 800;
-        color: #111827;
     }
 
     .error {
