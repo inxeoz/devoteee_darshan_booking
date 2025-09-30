@@ -11,6 +11,7 @@
     <a href="/dashboard/vipdarshan">vip darshan </a>
     <a href="/mybooking">My Booking </a>
     <a href="/darshan_management">Darshan Management </a>
+    <a href="/registration/login">login</a>
 </nav>
 
 <slot />

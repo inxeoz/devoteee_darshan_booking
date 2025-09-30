@@ -1,5 +1,10 @@
 <script>
     let mobile = "";
+    let otp = "";
+
+    let otp_sent = false;
+
+    let touched = false;
     let loading = false;
     import { goto } from "$app/navigation";
 
@@ -8,9 +13,27 @@
     }
 
     async function handleRegistration() {
-        if (mobile.length > 0) {
-            await generateToken();
+        if (!otp_sent) {
+            if (mobile.length > 0) {
+                await generateToken();
+
+                otp_sent = true;
+            }
+
+            //api verify and register
+            // on success of registration
+        } else {
+            // send phone number to server and (server will send otp to number) => result{cookie, is previously exist , is_kyc_complete}
+            // save cookie to local
+            // if previosuly exist then check is_kyc_complete : if yes then goto dashboard directly, if not is_kyc_complete then goto kyc page
+            // if previously not exist then goto kyc page
+            //
         }
+        //if not done ekyc
+        // goto("/registration/ekyc", {});
+
+        //if ekyc complete
+        // goto to login page
     }
 
     async function generateToken() {
@@ -57,13 +80,29 @@
                 readonly={true}
             />
 
+            <input
+                id="otp"
+                class="input"
+                type="tel"
+                inputmode="numeric"
+                placeholder="Enter otp"
+                bind:value={otp}
+                on:blur={() => (touched = true)}
+                aria-describedby="mobile-help"
+                hidden={!otp_sent}
+            />
+
             <button
                 class="btn"
                 type="submit"
                 disabled={loading}
                 on:click={() => handleRegistration()}
             >
-                Submit
+                {#if !otp_sent}
+                    Submit
+                {:else}
+                    Enter Otp
+                {/if}
             </button>
         </form>
 

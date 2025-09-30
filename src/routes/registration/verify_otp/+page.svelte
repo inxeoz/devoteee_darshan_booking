@@ -10,6 +10,7 @@
     async function handleRegistration() {
         if (mobile.length > 0) {
             await generateToken();
+            goto("/verify_otp");
         }
     }
 
