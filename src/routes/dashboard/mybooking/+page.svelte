@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
 
     type Status = "Approved" | "Pending" | "Pending Verification" | "Completed";
@@ -98,8 +99,12 @@
 
         <div class="row">
             <h2 class="section">{sectionTitle}</h2>
-            <button class="link" type="button" on:click={back}
-                >← Back to Dashboard</button
+            <button
+                class="link"
+                type="button"
+                on:click={() => {
+                    goto("/dashboard");
+                }}>← Back to Dashboard</button
             >
         </div>
 
