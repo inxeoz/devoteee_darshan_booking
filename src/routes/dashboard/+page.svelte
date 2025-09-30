@@ -1,26 +1,16 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
+    import { onMount, onDestroy } from "svelte";
 
-    const dispatch = createEventDispatcher<{
-        action: { id: string; label: string };
-        logout: void;
-    }>();
+    const dispatch = createEventDispatcher();
 
-    // Title/subtitle
-    export let title: string = "Dashboard";
-    export let welcome: string = "Welcome back!";
+    export let title = "Dashboard";
+    export let welcome = "Welcome back!";
+    export let panelTitle = "Dashboard";
+    export let panelHelp = "Welcome! Please select an option below.";
+    let devoteee_name = "";
 
-    // Secondary headline and helper text inside the card
-    export let panelTitle: string = "Dashboard";
-    export let panelHelp: string = "Welcome! Please select an option below.";
-
-    // Actions shown as full-width buttons
-    export interface Action {
-        id: string;
-        label: string;
-    }
-
-    export let actions: Action[] = [
+    export let actions = [
         { id: "viewBookings", label: "View Bookings" },
         { id: "bookShigra", label: "Book - Shigra Darshan" },
         { id: "bookVip", label: "Book - VIP Darshan" },
@@ -28,21 +18,58 @@
         { id: "bookBhasm", label: "Book - Bhasm Arti" },
     ];
 
-    // Which action (index) should use the alternate (purple) color
-    export let accentIndex: number = 2;
+    export let accentIndex = 2;
 
-    function onClick(action: Action) {
+    function onClick(action) {
         dispatch("action", action);
     }
-    function logout() {
-        dispatch("logout");
+
+    onMount(() => {
+        console.log("Component mounted!");
+
+        getProfileDetails();
+        // You can also return a cleanup function here (like onDestroy).
+        return () => {
+            console.log("Cleanup on unmount!");
+        };
+    });
+
+    async function getProfileDetails() {
+        try {
+            const res = await fetch(
+                "http://localhost:1880/get_profile_details",
+                {
+                    method: "GET",
+                    headers: {
+                        auth_token: "18ad6b1e9144a9069024092cfc2e47d0",
+                    },
+                },
+            );
+
+            if (!res.ok) {
+                throw new Error("Network response was not ok");
+            }
+
+            const data = await res.json();
+            console.log(data.message);
+            console.log(data.message.devoteee_name);
+
+            devoteee_name = data.message.devoteee_name;
+        } catch (err) {
+            console.error("Error fetching profile details:", err);
+        }
     }
 </script>
 
 <div class="page">
-    <div class="card" role="region" aria-labelledby="title">
-        <h1 id="title" class="title">{title}</h1>
-        <p class="subtitle">{welcome}</p>
+    <div class="card">
+        <h1 class="title">{title}</h1>
+        <p class="subtitle">
+            {welcome}
+            {#if devoteee_name.length > 0}
+                {devoteee_name}
+            {/if}
+        </p>
 
         <h2 class="panel-title">{panelTitle}</h2>
         <p class="panel-help">{panelHelp}</p>
@@ -51,7 +78,6 @@
             {#each actions as action, i}
                 <button
                     class="btn {i === accentIndex ? 'alt' : 'primary'}"
-                    type="button"
                     on:click={() => onClick(action)}
                 >
                     {action.label}
@@ -59,14 +85,13 @@
             {/each}
         </div>
 
-        <button type="button" class="logout" on:click={logout}>Logout</button>
+        <button class="logout" on:click={() => dispatch("logout")}
+            >Logout</button
+        >
     </div>
 </div>
 
 <style>
-    :global(html, body) {
-        height: 100%;
-    }
     .page {
         min-height: 100vh;
         background: #f4f6f8;
@@ -78,55 +103,39 @@
         width: min(620px, 92vw);
         background: #fff;
         border-radius: 14px;
-        box-shadow: 0 10px 28px rgba(16, 24, 40, 0.12);
-        padding: 36px 40px 32px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        padding: 32px;
         text-align: center;
     }
     .title {
-        margin: 0 0 6px;
-        font-size: 28px;
+        font-size: 24px;
         font-weight: 700;
-        line-height: 1.2;
-        color: #1f2937;
+        margin-bottom: 6px;
     }
-    .subtitle {
-        margin: 0 12px 18px;
+    .subtitle,
+    .panel-help,
+    .logout {
         color: #6b7280;
         font-size: 14px;
     }
     .panel-title {
-        margin: 4px 0 6px;
-        font-size: 20px;
-        font-weight: 700;
-        color: #111827;
-    }
-    .panel-help {
-        margin: 0 0 16px;
-        color: #6b7280;
-        font-size: 14px;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 8px 0;
     }
     .stack {
         display: grid;
-        gap: 12px;
-        margin: 16px 0 10px;
+        gap: 10px;
+        margin: 16px 0;
     }
-
     .btn {
         height: 44px;
-        border: 0;
+        border: none;
         border-radius: 10px;
         font-weight: 600;
-        font-size: 15px;
         cursor: pointer;
-        transition:
-            transform 0.02s ease,
-            filter 0.15s ease,
-            opacity 0.15s ease;
         width: 100%;
         color: #fff;
-    }
-    .btn:active {
-        transform: translateY(1px);
     }
     .btn.primary {
         background: #2151ea;
@@ -134,14 +143,10 @@
     .btn.alt {
         background: #443de0;
     }
-
     .logout {
-        appearance: none;
-        background: transparent;
-        border: 0;
-        color: #6b7280;
-        font-size: 14px;
-        margin-top: 8px;
+        background: none;
+        border: none;
+        margin-top: 10px;
         cursor: pointer;
     }
     .logout:hover {
