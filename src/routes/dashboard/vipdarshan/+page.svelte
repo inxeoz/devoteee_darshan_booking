@@ -69,6 +69,11 @@
     let successMessage = "";
     let errorMessage = "";
 
+    // New: when true, hide the form and show the success view
+    let bookingSuccess = false;
+    // Optionally store booking id returned by server
+    let bookingId: string | number | null = null;
+
     // Time-slots (mock data)
     type Slot = { time: string; seats: number };
     let slots: Slot[] = [
@@ -202,6 +207,7 @@
 
             const data = await res.json().catch(() => null);
             successMessage = "Appointment application submitted successfully.";
+            bookingSuccess = true;
             // dispatch submit for parent handlers
             dispatch("submit", {
                 protocol: selectedProtocol(),
@@ -254,204 +260,243 @@
             >
         </div>
 
-        <div class="alert" role="alert">
-            <strong>STATUTORY WARNING:</strong>
-            <div>
-                This booking is under the MP Government Protocol category.
-                <b>
-                    If any detail or document submitted is found to be fake or
-                    incorrect during verification, legal action will be
-                    initiated, and the booking will be immediately cancelled
-                    without refund.
-                </b>
-            </div>
-        </div>
-
-        <!-- Primary Devotee -->
-        <label class="label">Primary Devotee</label>
-        <div class="display-box">
-            <div class="strong">{primaryDevotee}</div>
-            <div class="muted">
-                You will be the primary person for this booking.
-            </div>
-        </div>
-
-        <!-- Protocol Select -->
-        <label class="label"
-            >Protocol under which State Government of MP List</label
-        >
-        <select
-            class="input"
-            bind:value={selectedProtocolValue}
-            aria-invalid={!selectedProtocolValue ? "true" : "false"}
-        >
-            <option value="" disabled selected>Select Protocol</option>
-            {#each protocols as p}
-                <option value={p.value}>{p.label}</option>
-            {/each}
-        </select>
-
-        <!-- Companions -->
-        <div class="row-between">
-            <label class="label mb0">Companions (max {maxCompanions})</label>
-            <span class="muted small">{companions.length} added</span>
-        </div>
-
-        <div class="companions">
-            {#if companions.length === 0}
-                <button
-                    type="button"
-                    class="btn success"
-                    on:click={addCompanion}>Add Companion</button
-                >
-            {/if}
-
-            {#each companions as c, i}
-                <div class="companion-item">
-                    <div class="companion-grid">
-                        <input
-                            class="input"
-                            type="text"
-                            placeholder="Full name"
-                            bind:value={companions[i].companion_name}
-                            on:input={(e) =>
-                                updateCompanionField(
-                                    i,
-                                    "companion_name",
-                                    (e.target as HTMLInputElement).value,
-                                )}
-                        />
-                        <input
-                            class="input"
-                            type="tel"
-                            placeholder="Phone (10 digits)"
-                            bind:value={companions[i].companion_phone}
-                            on:input={(e) =>
-                                updateCompanionField(
-                                    i,
-                                    "companion_phone",
-                                    (e.target as HTMLInputElement).value,
-                                )}
-                        />
-                        <select
-                            class="input"
-                            bind:value={companions[i].companion_gender}
-                            on:change={(e) =>
-                                updateCompanionField(
-                                    i,
-                                    "companion_gender",
-                                    (e.target as HTMLSelectElement).value,
-                                )}
-                        >
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="companion-actions">
-                        <button
-                            class="icon danger"
-                            type="button"
-                            on:click={() => removeCompanion(i)}
-                            aria-label="Remove companion">✕</button
-                        >
-                    </div>
+        {#if !bookingSuccess}
+            <div class="alert" role="alert">
+                <strong>STATUTORY WARNING:</strong>
+                <div>
+                    This booking is under the MP Government Protocol category.
+                    <b>
+                        If any detail or document submitted is found to be fake
+                        or incorrect during verification, legal action will be
+                        initiated, and the booking will be immediately cancelled
+                        without refund.
+                    </b>
                 </div>
-            {/each}
-
-            {#if companions.length > 0 && companions.length < maxCompanions}
-                <button
-                    type="button"
-                    class="btn success subtle"
-                    on:click={addCompanion}>+ Add Companion</button
-                >
-            {/if}
-        </div>
-
-        <!-- Date of Visit -->
-        <label class="label">Date of Visit</label>
-        <div class="date-wrap">
-            <input
-                class="input"
-                type="date"
-                bind:value={visitDate}
-                aria-invalid={!visitDate ? "true" : "false"}
-            />
-            <span class="calendar" aria-hidden="true">📅</span>
-        </div>
-
-        <!-- AVAILABLE SLOTS -->
-        <div class="slots-wrap">
-            <div class="slots-head">
-                <div class="label mb0">Available Slots</div>
-                <div class="muted small">Please select a time slot below.</div>
             </div>
-            <div
-                class="slots-grid"
-                role="listbox"
-                aria-label="Available time slots"
+
+            <!-- Primary Devotee -->
+            <label class="label">Primary Devotee</label>
+            <div class="display-box">
+                <div class="strong">{primaryDevotee}</div>
+                <div class="muted">
+                    You will be the primary person for this booking.
+                </div>
+            </div>
+
+            <!-- Protocol Select -->
+            <label class="label"
+                >Protocol under which State Government of MP List</label
             >
-                {#each slots as s}
+            <select
+                class="input"
+                bind:value={selectedProtocolValue}
+                aria-invalid={!selectedProtocolValue ? "true" : "false"}
+            >
+                <option value="" disabled selected>Select Protocol</option>
+                {#each protocols as p}
+                    <option value={p.value}>{p.label}</option>
+                {/each}
+            </select>
+
+            <!-- Companions -->
+            <div class="row-between">
+                <label class="label mb0">Companions (max {maxCompanions})</label
+                >
+                <span class="muted small">{companions.length} added</span>
+            </div>
+
+            <div class="companions">
+                {#if companions.length === 0}
                     <button
                         type="button"
-                        class="slot-btn {slotClass(s)}"
-                        aria-pressed={selectedSlot === s.time}
-                        aria-disabled={s.seats === 0}
-                        on:click={() =>
-                            (selectedSlot =
-                                s.seats === 0 ? selectedSlot : s.time)}
+                        class="btn success"
+                        on:click={addCompanion}>Add Companion</button
                     >
-                        <div class="slot-time">{s.time}</div>
-                        <div class="slot-seats">{s.seats} Seats</div>
-                    </button>
+                {/if}
+
+                {#each companions as c, i}
+                    <div class="companion-item">
+                        <div class="companion-grid">
+                            <input
+                                class="input"
+                                type="text"
+                                placeholder="Full name"
+                                bind:value={companions[i].companion_name}
+                                on:input={(e) =>
+                                    updateCompanionField(
+                                        i,
+                                        "companion_name",
+                                        (e.target as HTMLInputElement).value,
+                                    )}
+                            />
+                            <input
+                                class="input"
+                                type="tel"
+                                placeholder="Phone (10 digits)"
+                                bind:value={companions[i].companion_phone}
+                                on:input={(e) =>
+                                    updateCompanionField(
+                                        i,
+                                        "companion_phone",
+                                        (e.target as HTMLInputElement).value,
+                                    )}
+                            />
+                            <select
+                                class="input"
+                                bind:value={companions[i].companion_gender}
+                                on:change={(e) =>
+                                    updateCompanionField(
+                                        i,
+                                        "companion_gender",
+                                        (e.target as HTMLSelectElement).value,
+                                    )}
+                            >
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="companion-actions">
+                            <button
+                                class="icon danger"
+                                type="button"
+                                on:click={() => removeCompanion(i)}
+                                aria-label="Remove companion">✕</button
+                            >
+                        </div>
+                    </div>
                 {/each}
+
+                {#if companions.length > 0 && companions.length < maxCompanions}
+                    <button
+                        type="button"
+                        class="btn success subtle"
+                        on:click={addCompanion}>+ Add Companion</button
+                    >
+                {/if}
             </div>
-        </div>
 
-        <!-- Authority Letter -->
-        <label class="label">Government Authority Letter (PDF)</label>
-        <input
-            class="input"
-            type="file"
-            accept=".pdf"
-            on:change={handleFileChange}
-        />
-        {#if authorityLetterFile}
-            <div class="muted small">Selected: {authorityLetterFile.name}</div>
-        {/if}
+            <!-- Date of Visit -->
+            <label class="label">Date of Visit</label>
+            <div class="date-wrap">
+                <input
+                    class="input"
+                    type="date"
+                    bind:value={visitDate}
+                    aria-invalid={!visitDate ? "true" : "false"}
+                />
+            </div>
 
-        <!-- Draft toggle -->
-        <div class="draft-row">
-            <label class="label">Save as Draft</label>
-            <div>
-                <input id="draft" type="checkbox" bind:checked={saveAsDraft} />
-                <label for="draft" class="muted"
-                    >Save this booking as draft (you can complete later)</label
+            <!-- AVAILABLE SLOTS -->
+            <div class="slots-wrap">
+                <div class="slots-head">
+                    <div class="label mb0">Available Slots</div>
+                    <div class="muted small">
+                        Please select a time slot below.
+                    </div>
+                </div>
+                <div
+                    class="slots-grid"
+                    role="listbox"
+                    aria-label="Available time slots"
                 >
+                    {#each slots as s}
+                        <button
+                            type="button"
+                            class="slot-btn {slotClass(s)}"
+                            aria-pressed={selectedSlot === s.time}
+                            aria-disabled={s.seats === 0}
+                            on:click={() =>
+                                (selectedSlot =
+                                    s.seats === 0 ? selectedSlot : s.time)}
+                        >
+                            <div class="slot-time">{s.time}</div>
+                            <div class="slot-seats">{s.seats} Seats</div>
+                        </button>
+                    {/each}
+                </div>
             </div>
-        </div>
 
-        {#if invalid}
-            <p class="error">{invalid}</p>
+            <!-- Authority Letter -->
+            <label class="label">Government Authority Letter (PDF)</label>
+            <input
+                class="input"
+                type="file"
+                accept=".pdf"
+                on:change={handleFileChange}
+            />
+            {#if authorityLetterFile}
+                <div class="muted small">
+                    Selected: {authorityLetterFile.name}
+                </div>
+            {/if}
+
+            <!-- Draft toggle -->
+            <div class="draft-row">
+                <label class="label">Save as Draft</label>
+                <div>
+                    <input
+                        id="draft"
+                        type="checkbox"
+                        bind:checked={saveAsDraft}
+                    />
+                    <label for="draft" class="muted"
+                        >Save this booking as draft (you can complete later)</label
+                    >
+                </div>
+            </div>
+
+            {#if invalid}
+                <p class="error">{invalid}</p>
+            {/if}
+
+            {#if errorMessage}
+                <p class="error small">{errorMessage}</p>
+            {/if}
+
+            {#if successMessage}
+                <p class="success small">{successMessage}</p>
+            {/if}
+
+            <!-- Apply button -->
+            <button
+                class="btn primary xl"
+                type="button"
+                on:click={submitBooking}
+                disabled={loading}
+            >
+                {#if loading}Processing...{:else}Apply For Appointment{/if}
+            </button>
+        {:else}
+            <!-- Success view shown after successful booking -->
+            <div class="success-card" role="status" aria-live="polite">
+                <h2 class="section">Success</h2>
+                <p class="success large">
+                    Succss fully applied for appoint ment
+                </p>
+                {#if bookingId}
+                    <p class="muted small">Application ID: {bookingId}</p>
+                {/if}
+                <div
+                    style="display:flex; gap:12px; margin-top:14px; justify-content:center;"
+                >
+                    <button
+                        class="btn success xl"
+                        type="button"
+                        on:click={() => goto("/dashboard/mybooking")}
+                    >
+                        See your appoints
+                    </button>
+                    <button
+                        class="btn primary subtle xl"
+                        type="button"
+                        on:click={() => goto("/dashboard")}
+                    >
+                        Back to Dashboard
+                    </button>
+                </div>
+            </div>
         {/if}
-
-        {#if errorMessage}
-            <p class="error small">{errorMessage}</p>
-        {/if}
-
-        {#if successMessage}
-            <p class="success small">{successMessage}</p>
-        {/if}
-
-        <!-- Apply button -->
-        <button
-            class="btn primary xl"
-            type="button"
-            on:click={submitBooking}
-            disabled={loading}
-        >
-            {#if loading}Processing...{:else}Apply For Appointment{/if}
-        </button>
     </div>
 </div>
 
@@ -604,18 +649,6 @@
     }
     .icon.danger {
         background: #fee2e2;
-    }
-
-    .date-wrap {
-        position: relative;
-    }
-    .calendar {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none;
-        opacity: 0.7;
     }
 
     /* SLOTS */
