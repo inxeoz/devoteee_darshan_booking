@@ -12,7 +12,7 @@
     <a href="/dashboard/shigradarshan">shigra darshan </a>
     <a href="/dashboard/bhasmarti">bhasm arti </a>
 
-    <a href="/mybooking">My Booking </a>
+    <a href="/dashboard/mybooking">My Booking </a>
     <a href="/darshan_management">Darshan Management </a>
     <a href="/registration/login">login</a>
 </nav>
