@@ -1,25 +1,37 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
-    import { onMount, onDestroy } from "svelte";
-
+    import { createEventDispatcher, onMount } from "svelte";
     import { getCookieByName } from "../../helper.js";
+    import { goto } from "$app/navigation";
 
     const dispatch = createEventDispatcher();
 
-    export let title = "Dashboard";
-    export let welcome = "Welcome back!";
-    export let panelTitle = "Dashboard";
-    export let panelHelp = "Welcome! Please select an option below.";
-    let devoteee_name = "";
-
-    export let actions = [
-        { id: "viewBookings", label: "View Bookings" },
+    const defaultActions = [
+        {
+            id: "viewBookings",
+            label: "View Bookings",
+            site: "mybooking",
+        },
         { id: "bookShigra", label: "Book - Shigra Darshan" },
-        { id: "bookVip", label: "Book - VIP Darshan" },
+        {
+            id: "bookVip",
+            label: "Book - VIP Darshan",
+            site: "/dashboard/vipdarshan",
+        },
         { id: "bookLocalide", label: "Book - Localide Darshan" },
         { id: "bookBhasm", label: "Book - Bhasm Arti" },
     ];
 
+    interface ProfileDetails {
+        devoteee_name?: string;
+        is_ekyc_complete?: number;
+        [key: string]: any;
+    }
+
+    let devoteee_details: ProfileDetails | null = null;
+    let devoteee_name = "";
+
+    export let title = "Dashboard";
+    export let welcome = "Welcome back!";
     export let accentIndex = 2;
 
     function onClick(action) {
@@ -27,13 +39,7 @@
     }
 
     onMount(() => {
-        console.log(getCookieByName("auth_token"));
-
         getProfileDetails();
-        // You can also return a cleanup function here (like onDestroy).
-        return () => {
-            console.log("Cleanup on unmount!");
-        };
     });
 
     async function getProfileDetails() {
@@ -41,43 +47,48 @@
             const res = await fetch(
                 "http://localhost:1880/get_profile_details",
                 {
-                    method: "GET",
                     headers: {
                         auth_token: getCookieByName("auth_token") || "",
                     },
                 },
             );
 
-            if (!res.ok) {
-                throw new Error("Network response was not ok");
-            }
+            if (!res.ok) throw new Error("Network response was not ok");
 
             const data = await res.json();
-            console.log(data.message);
-            console.log(data.message.devoteee_name);
-
-            devoteee_name = data.message.devoteee_name;
+            devoteee_details = data.message;
+            devoteee_name = data.message.devoteee_name ?? "";
         } catch (err) {
             console.error("Error fetching profile details:", err);
         }
+    }
+
+    function complete_kyc() {
+        goto("registration/complete_profile");
     }
 </script>
 
 <div class="page">
     <div class="card">
-        <h1 class="title">{title}</h1>
-        <p class="subtitle">
-            {welcome}
-            {#if devoteee_name.length > 0}
-                {devoteee_name}
-            {/if}
-        </p>
+        <div class="main_details">
+            <h1 class="title">{title}</h1>
+            <p class="subtitle">
+                {welcome}
+                {#if devoteee_name}{devoteee_name}{/if}
+            </p>
 
-        <h2 class="panel-title">{panelTitle}</h2>
-        <p class="panel-help">{panelHelp}</p>
+            {#if devoteee_details?.is_ekyc_complete == 0}
+                <button
+                    class="btn danger bg-orange-400"
+                    on:click={complete_kyc}
+                >
+                    complete your kyc
+                </button>
+            {/if}
+        </div>
 
         <div class="stack">
-            {#each actions as action, i}
+            {#each defaultActions as action, i}
                 <button
                     class="btn {i === accentIndex ? 'alt' : 'primary'}"
                     on:click={() => onClick(action)}
@@ -87,9 +98,9 @@
             {/each}
         </div>
 
-        <button class="logout" on:click={() => dispatch("logout")}
-            >Logout</button
-        >
+        <button class="logout" on:click={() => dispatch("logout")}>
+            Logout
+        </button>
     </div>
 </div>
 

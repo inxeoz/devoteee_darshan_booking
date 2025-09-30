@@ -9,6 +9,9 @@
     <a href="/registration/complete_profile">complete profile </a>
     <a href="/dashboard">dashboard </a>
     <a href="/dashboard/vipdarshan">vip darshan </a>
+    <a href="/dashboard/shigradarshan">shigra darshan </a>
+    <a href="/dashboard/bhasmarti">bhasm arti </a>
+
     <a href="/mybooking">My Booking </a>
     <a href="/darshan_management">Darshan Management </a>
     <a href="/registration/login">login</a>
