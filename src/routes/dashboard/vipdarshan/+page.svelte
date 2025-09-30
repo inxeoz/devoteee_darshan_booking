@@ -162,7 +162,7 @@
                 darshan_date: visitDate, // expected "YYYY-MM-DD"
                 darshan_time: slotTimeTo24hr(selectedSlot), // "HH:MM"
                 darshan_with_protocol: 1, // set 1 to indicate protocol
-                protocol_rank: selectedProtocol()?.label || "",
+                protocol_rank: selectedProtocol()?.value || "",
                 government_authority_letter: authorityLetterFile
                     ? authorityLetterFile.name
                     : "", // filename only
