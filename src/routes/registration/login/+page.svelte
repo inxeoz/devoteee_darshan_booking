@@ -48,7 +48,7 @@
 
             if (data.message) {
                 document.cookie = `auth_token=${data.message}; path=/;`;
-                // goto()
+                goto("/dashboard");
             }
 
             // Print the "message" property
