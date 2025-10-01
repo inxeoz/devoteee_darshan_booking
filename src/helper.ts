@@ -28,3 +28,52 @@ export async function getProfileDetails() {
     return null;
   }
 }
+
+export async function request_otp(phone: number) {
+  try {
+    const res = await fetch("http://localhost:1880/request_otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        phone: phone,
+      }),
+    });
+
+    const data = await res.json();
+
+    return data;
+  } catch (e) {
+    console.log("errr", e);
+
+    return null;
+  }
+}
+
+export async function verify_token_and_get_token(phone: number, otp: string) {
+  try {
+    const res = await fetch("http://localhost:1880/verify_otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        phone: phone,
+        otp: otp,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.message) {
+      document.cookie = `auth_token=${data.message}; path=/;`;
+    }
+
+    return data;
+  } catch (e) {
+    console.log("errr", e);
+
+    return null;
+  }
+}

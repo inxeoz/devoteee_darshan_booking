@@ -1,60 +1,23 @@
 <script>
     import { goto } from "$app/navigation";
+    import {
+        request_otp,
+        verify_token_and_get_token,
+    } from "../../../helper.js";
 
-    let mobile = 0;
+    let phone = 0;
     let otp = "";
 
     async function sendOtp() {
-        // alert(`OTP sent to ${mobile} (simulation)`);
-        await request_otp();
+        // alert(`OTP sent to ${phone} (simulation)`);
+        await request_otp(phone);
     }
 
     async function login() {
-        await verify_token_and_get_token();
-    }
+        const data = await verify_token_and_get_token(phone, otp);
 
-    async function request_otp() {
-        try {
-            const res = await fetch("http://localhost:1880/request_otp", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    phone: mobile,
-                }),
-            });
-
-            console.log(res);
-        } catch (e) {
-            console.log("errr", e);
-        }
-    }
-
-    async function verify_token_and_get_token() {
-        try {
-            const res = await fetch("http://localhost:1880/verify_otp", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    phone: mobile,
-                    otp: otp,
-                }),
-            });
-
-            const data = await res.json();
-
-            if (data.message) {
-                document.cookie = `auth_token=${data.message}; path=/;`;
-                goto("/dashboard");
-            }
-
-            // Print the "message" property
-            console.log(data.message);
-        } catch (e) {
-            console.log("errr", e);
+        if (data !== null) {
+            goto("/dashboard");
         }
     }
 </script>
@@ -64,11 +27,11 @@
         <h2>Login</h2>
 
         <div class="form-row">
-            <label>Mobile Number</label>
+            <label>phone Number</label>
             <input
                 type="text"
-                bind:value={mobile}
-                placeholder="Enter mobile number"
+                bind:value={phone}
+                placeholder="Enter phone number"
             />
         </div>
 
