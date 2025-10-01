@@ -103,3 +103,23 @@ export async function loadBookings() {
     // keep existing data if any
   }
 }
+
+export async function create_appointment(body_data: object) {
+  try {
+    // NOTE: curl used GET with body — that's unusual. We use POST here (recommended).
+    const res = await fetch("http://localhost:1880/create_appointment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        auth_token: getCookieByName("auth_token") || "",
+      },
+      body: JSON.stringify(body_data),
+    });
+
+    const data = await res.json();
+  } catch (err: any) {
+    console.error(err);
+
+    return null;
+  }
+}

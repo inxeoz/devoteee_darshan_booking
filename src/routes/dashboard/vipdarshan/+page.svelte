@@ -1,11 +1,10 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { createEventDispatcher } from "svelte";
     import { onMount } from "svelte";
-    import { getCookieByName } from "../../../helper.js";
+    import { getCookieByName, create_appointment } from "../../../helper.js";
 
     // ----- Types -----
-    export type Protocol = {
+    type Protocol = {
         value: string;
         label: string;
         fee: number;
@@ -31,8 +30,6 @@
         back: void;
         addCompanion: void;
     };
-
-    const dispatch = createEventDispatcher<Events>();
 
     // ----- Props -----
     export let title = "Book VIP Darshan (Protocol)";
@@ -116,7 +113,6 @@
                     companion_gender: "male",
                 },
             ];
-            dispatch("addCompanion");
         }
     };
 
@@ -133,8 +129,6 @@
             i === index ? { ...c, [field]: value } : c,
         );
     };
-
-    const back = () => dispatch("back");
 
     function slotTimeTo24hr(slotLabel: string) {
         // Example slotLabel: "08:00 AM" or "04:30 PM" -> return "08:00" / "16:30"
@@ -180,57 +174,10 @@
         };
 
         loading = true;
-        try {
-            // NOTE: curl used GET with body — that's unusual. We use POST here (recommended).
-            const res = await fetch(
-                "http://localhost:1880/create_appointment",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        auth_token: getCookieByName("auth_token") || "",
-                    },
-                    body: JSON.stringify(payload),
-                },
-            );
+        const data = await create_appointment(payload);
 
-            if (!res.ok) {
-                // try to read error text/json
-                let errText = await res.text();
-                try {
-                    const j = JSON.parse(errText);
-                    errText = j.message || JSON.stringify(j);
-                } catch (e) {
-                    // keep errText
-                }
-                throw new Error(`Server returned ${res.status}: ${errText}`);
-            }
-
-            const data = await res.json().catch(() => null);
-            successMessage = "Appointment application submitted successfully.";
-            bookingSuccess = true;
-            // dispatch submit for parent handlers
-            dispatch("submit", {
-                protocol: selectedProtocol(),
-                visitDate,
-                primaryDevotee,
-                companions: validCompanions,
-                total,
-                slot: selectedSlot,
-            });
-
-            // optionally show response details
-            if (data && data.booking_id) {
-                successMessage += ` Application ID: ${data.booking_id}`;
-            }
-        } catch (err: any) {
-            console.error(err);
-            errorMessage = err?.message
-                ? String(err.message)
-                : "Failed to submit application.";
-        } finally {
-            loading = false;
-        }
+        successMessage = "Appointment application submitted successfully.";
+        bookingSuccess = true;
     }
 
     function handleFileChange(e: Event) {
