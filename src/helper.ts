@@ -13,6 +13,7 @@ export function getCookieByName(name: string): string | null {
 export async function getProfileDetails() {
   try {
     const res = await fetch("http://localhost:1880/get_profile_details", {
+      method: "GET",
       headers: {
         auth_token: getCookieByName("auth_token") || "",
       },
