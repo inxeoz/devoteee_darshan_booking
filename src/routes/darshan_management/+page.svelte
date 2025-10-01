@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
+    import { getCookieByName } from "../../helper.js";
     import BookingDetailsModal, {
         type BookingDetails,
     } from "./BookingDetailsModal.svelte";
@@ -43,7 +44,7 @@
     // defaults taken from the curl you posted; override in parent for production
     export let apiUrl =
         "http://localhost:1880/get_list_of_appointments_admin?limit_start=1&limit_page_length=10";
-    export let authToken = "18ad6b1e9144a9069024092cfc2e47d0";
+
     export let limitStart = 1;
     export let pageLength = 10;
 
@@ -147,7 +148,7 @@
 
             const res = await fetch(url.toString(), {
                 headers: {
-                    auth_token: authToken,
+                    auth_token: getCookieByName("auth_token") || "",
                     Accept: "application/json",
                 },
             });
