@@ -1,201 +1,407 @@
 <script>
-  import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher } from "svelte";
+    import { goto } from "$app/navigation";
+    import { getCookieByName } from "../../../helper.js";
 
-  const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher();
 
-  // progress shown in the thin bar under the header
-  export let progress = 80; // percent
+    // progress shown in the thin bar under the header
+    export let progress = 80; // percent
 
-  // form model
-  let name = "";
-  let gender = "";
-  let dob = "";
-  let address = "";
+    // API defaults (override by passing props)
+    export let apiUrl =
+        "http://localhost:1880/create_or_update_devoteee_profile";
 
-  let touched = { name: false, gender: false, dob: false };
+    // form model
+    let name = "";
+    let gender = "";
+    let dob = "";
+    let address = "";
 
-  const errors = () => {
-    const e = {};
-    if (!name.trim()) e.name = "Please enter your full name.";
-    if (!gender) e.gender = "Please select a gender.";
-    if (!dob) e.dob = "Please choose your date of birth.";
-    return e;
-  };
+    let touched = { name: false, gender: false, dob: false };
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    touched = { name: true, gender: true, dob: true };
-    const eobj = errors();
-    if (Object.keys(eobj).length) return;
-    dispatch("submit", { name: name.trim(), gender, dob, address: address.trim() });
-  }
-  function goBack() {
-    dispatch("back");
-  }
+    let loading = false;
+    let submitted = false;
+    let serverMessage = "";
+    let serverCode = "";
+    let serverError = "";
+
+    const errors = () => {
+        const e = {};
+        if (!name.trim()) e.name = "Please enter your full name.";
+        if (!gender) e.gender = "Please select a gender.";
+        if (!dob) e.dob = "Please choose your date of birth.";
+        return e;
+    };
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        touched = { name: true, gender: true, dob: true };
+        const eobj = errors();
+        if (Object.keys(eobj).length) return;
+
+        loading = true;
+        serverError = "";
+        serverMessage = "";
+        serverCode = "";
+
+        // prepare payload as in your curl example
+        const payload = {
+            info: {
+                devoteee_name: name.trim(),
+                gender,
+                dob,
+                address: address.trim(),
+            },
+        };
+
+        try {
+            const res = await fetch(apiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    auth_token: getCookieByName("auth_token") || "",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const json = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                // try to display an error returned by server
+                serverError = json?.message || `Server returned ${res.status}`;
+                loading = false;
+                return;
+            }
+
+            // success
+            serverMessage = json?.message || "Profile saved.";
+            // If server returns a code like DVT0002 include it:
+            if (typeof json === "object") {
+                // some APIs return a code field or message - capture both if present
+                serverCode = json?.code || json?.status || "";
+            }
+
+            submitted = true;
+            dispatch("submit", {
+                name: name.trim(),
+                gender,
+                dob,
+                address: address.trim(),
+                response: json,
+            });
+        } catch (err) {
+            serverError = err?.message || String(err);
+        } finally {
+            loading = false;
+        }
+    }
+
+    function goBack() {
+        dispatch("back");
+    }
+
+    function goToMyBookings() {
+        goto("/dashboard/mybooking");
+    }
 </script>
 
 <div class="page">
-  <div class="card" role="region" aria-labelledby="title">
-    <h1 id="title" class="title">Register with Us</h1>
-    <p class="subtitle">Create your account to get started.</p>
+    <div class="card" role="region" aria-labelledby="title">
+        <div class="progress" aria-label="Progress">
+            <span
+                class="bar"
+                style="width: {Math.max(0, Math.min(100, progress))}%"
+            ></span>
+        </div>
 
-    <div class="progress" aria-label="Progress">
-      <span class="bar" style="width: {Math.max(0, Math.min(100, progress))}%"></span>
+        <h2 class="heading">Complete Your Profile</h2>
+        <p class="copy">
+            Please provide a few more details to finish your registration.
+        </p>
+
+        {#if submitted}
+            <div class="submitted">
+                <h3>Successfully applied for appointment</h3>
+                {#if serverMessage}
+                    <p class="copy">
+                        {serverMessage}
+                        {#if serverCode}(<strong>{serverCode}</strong>){/if}
+                    </p>
+                {/if}
+                <button
+                    class="btn primary"
+                    on:click={() => {
+                        goto("/dashboard");
+                    }}>Dashboard</button
+                >
+            </div>
+        {:else}
+            <form on:submit|preventDefault={handleSubmit} novalidate>
+                <!-- Full Name -->
+                <label class="label" for="name">Full Name</label>
+                <input
+                    id="name"
+                    class="input"
+                    class:invalid={touched.name && errors().name}
+                    type="text"
+                    placeholder="John Doe"
+                    bind:value={name}
+                    on:blur={() => (touched.name = true)}
+                    aria-invalid={touched.name && errors().name
+                        ? "true"
+                        : "false"}
+                />
+                {#if touched.name && errors().name}
+                    <div class="error">{errors().name}</div>
+                {/if}
+
+                <!-- Gender -->
+                <label class="label" for="gender">Gender</label>
+                <select
+                    id="gender"
+                    class="input"
+                    class:invalid={touched.gender && errors().gender}
+                    bind:value={gender}
+                    on:blur={() => (touched.gender = true)}
+                    aria-invalid={touched.gender && errors().gender
+                        ? "true"
+                        : "false"}
+                >
+                    <option value="" disabled>Select Gender</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="non-binary">Non-binary</option>
+                    <option value="prefer-not-to-say">Prefer not to say</option>
+                </select>
+                {#if touched.gender && errors().gender}
+                    <div class="error">{errors().gender}</div>
+                {/if}
+
+                <!-- Date of Birth -->
+                <label class="label" for="dob">Date of Birth</label>
+                <div class="date-wrap">
+                    <input
+                        id="dob"
+                        class="input"
+                        class:invalid={touched.dob && errors().dob}
+                        type="date"
+                        bind:value={dob}
+                        on:blur={() => (touched.dob = true)}
+                        aria-invalid={touched.dob && errors().dob
+                            ? "true"
+                            : "false"}
+                    />
+                    <span class="calendar" aria-hidden="true">📅</span>
+                </div>
+                {#if touched.dob && errors().dob}
+                    <div class="error">{errors().dob}</div>
+                {/if}
+
+                <!-- Address -->
+                <label class="label" for="addr">Address</label>
+                <textarea
+                    id="addr"
+                    class="input textarea"
+                    placeholder="123 Main St, Anytown, USA"
+                    rows="3"
+                    bind:value={address}
+                ></textarea>
+
+                {#if serverError}
+                    <div class="error" role="alert">{serverError}</div>
+                {/if}
+
+                <button class="btn primary" type="submit" disabled={loading}>
+                    {#if loading}
+                        Submitting…
+                    {:else}
+                        Update Profile
+                    {/if}
+                </button>
+            </form>
+        {/if}
+
+        <button class="back" type="button" on:click={goBack}>← Back</button>
+
+        <p class="footnote">
+            Already registered?
+            <a href="/registration/login" class="link"
+                >Login with Mobile Number</a
+            >
+        </p>
     </div>
-
-    <h2 class="heading">Complete Your Profile</h2>
-    <p class="copy">Please provide a few more details to finish your registration.</p>
-
-    <form on:submit={handleSubmit} novalidate>
-      <!-- Full Name -->
-      <label class="label" for="name">Full Name</label>
-      <input
-        id="name"
-        class="input {touched.name && errors().name ? 'invalid' : ''}"
-        type="text"
-        placeholder="John Doe"
-        bind:value={name}
-        on:blur={() => (touched.name = true)}
-        aria-invalid={touched.name && errors().name ? 'true' : 'false'}
-      />
-      {#if touched.name && errors().name}
-        <div class="error">{errors().name}</div>
-      {/if}
-
-      <!-- Gender -->
-      <label class="label" for="gender">Gender</label>
-      <select
-        id="gender"
-        class="input {touched.gender && errors().gender ? 'invalid' : ''}"
-        bind:value={gender}
-        on:blur={() => (touched.gender = true)}
-        aria-invalid={touched.gender && errors().gender ? 'true' : 'false'}
-      >
-        <option value="" disabled selected>Select Gender</option>
-        <option>Female</option>
-        <option>Male</option>
-        <option>Non-binary</option>
-        <option>Prefer not to say</option>
-      </select>
-      {#if touched.gender && errors().gender}
-        <div class="error">{errors().gender}</div>
-      {/if}
-
-      <!-- Date of Birth -->
-      <label class="label" for="dob">Date of Birth</label>
-      <div class="date-wrap">
-        <input
-          id="dob"
-          class="input {touched.dob && errors().dob ? 'invalid' : ''}"
-          type="date"
-          bind:value={dob}
-          on:blur={() => (touched.dob = true)}
-          aria-invalid={touched.dob && errors().dob ? 'true' : 'false'}
-        />
-        <span class="calendar" aria-hidden="true">📅</span>
-      </div>
-      {#if touched.dob && errors().dob}
-        <div class="error">{errors().dob}</div>
-      {/if}
-
-      <!-- Address -->
-      <label class="label" for="addr">Address</label>
-      <textarea
-        id="addr"
-        class="input textarea"
-        placeholder="123 Main St, Anytown, USA"
-        rows="3"
-        bind:value={address}
-      />
-
-      <button class="btn primary" type="submit">Complete Registration</button>
-    </form>
-
-    <button class="back" type="button" on:click={goBack}>← Back</button>
-
-    <p class="footnote">
-      Already registered?
-      <a href="/login?method=mobile" class="link">Login with Mobile Number</a>
-    </p>
-  </div>
 </div>
 
 <style>
-  :global(html, body) { height: 100%; }
-  .page {
-    min-height: 100vh;
-    background: #f4f6f8;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-  }
-  .card {
-    width: min(640px, 92vw);
-    background: #fff;
-    border-radius: 14px;
-    box-shadow: 0 10px 28px rgba(16,24,40,.12);
-    padding: 36px 40px 32px;
-  }
-  .title {
-    margin: 0 0 6px;
-    font-size: 28px;
-    line-height: 1.2;
-    font-weight: 700;
-    color: #1f2937;
-    text-align: center;
-  }
-  .subtitle {
-    margin: 0 0 18px;
-    color: #6b7280;
-    font-size: 14px;
-    text-align: center;
-  }
-  .progress { height: 4px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
-  .bar { display: block; height: 100%; background: #2151ea; transition: width .25s ease; }
-  .heading {
-    text-align: center;
-    margin: 18px 0 6px;
-    font-size: 20px; font-weight: 700; color: #111827;
-  }
-  .copy {
-    text-align: center; margin: 0 0 14px;
-    color: #6b7280; font-size: 14px;
-  }
-  form { margin-top: 6px; }
-  .label { display: block; margin: 14px 0 6px; font-size: 13px; color: #4b5563; }
-  .input {
-    width: 100%; height: 44px; padding: 0 14px;
-    border: 1px solid #e5e7eb; border-radius: 10px; background: #fff;
-    font-size: 14px; outline: none;
-    transition: box-shadow .15s ease, border-color .15s ease;
-  }
-  .textarea { height: auto; padding: 10px 14px; resize: vertical; }
-  .input:focus { border-color: #2151ea; box-shadow: 0 0 0 3px rgba(33,81,234,.15); }
-  .input.invalid { border-color: #dc2626; }
-  .error { margin-top: 6px; font-size: 12px; color: #b91c1c; }
+    :global(html, body) {
+        height: 100%;
+    }
+    .page {
+        min-height: 100vh;
+        background: #f4f6f8;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+    }
+    .card {
+        width: min(640px, 92vw);
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 10px 28px rgba(16, 24, 40, 0.12);
+        padding: 36px 40px 32px;
+    }
+    .title {
+        margin: 0 0 6px;
+        font-size: 28px;
+        line-height: 1.2;
+        font-weight: 700;
+        color: #1f2937;
+        text-align: center;
+    }
+    .subtitle {
+        margin: 0 0 18px;
+        color: #6b7280;
+        font-size: 14px;
+        text-align: center;
+    }
+    .progress {
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 12px;
+    }
+    .bar {
+        display: block;
+        height: 100%;
+        background: #2151ea;
+        transition: width 0.25s ease;
+    }
+    .heading {
+        text-align: center;
+        margin: 18px 0 6px;
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+    }
+    .copy {
+        text-align: center;
+        margin: 0 0 14px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+    form {
+        margin-top: 6px;
+    }
+    .label {
+        display: block;
+        margin: 14px 0 6px;
+        font-size: 13px;
+        color: #4b5563;
+    }
+    .input {
+        width: 100%;
+        height: 44px;
+        padding: 0 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fff;
+        font-size: 14px;
+        outline: none;
+        transition:
+            box-shadow 0.15s ease,
+            border-color 0.15s ease;
+    }
+    .textarea {
+        height: auto;
+        padding: 10px 14px;
+        resize: vertical;
+    }
+    .input:focus {
+        border-color: #2151ea;
+        box-shadow: 0 0 0 3px rgba(33, 81, 234, 0.15);
+    }
+    .input.invalid {
+        border-color: #dc2626;
+    }
+    .error {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #b91c1c;
+    }
 
-  .date-wrap { position: relative; }
-  .date-wrap .calendar {
-    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-    pointer-events: none; font-size: 16px; opacity: .7;
-  }
+    .date-wrap {
+        position: relative;
+    }
+    .date-wrap .calendar {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        font-size: 16px;
+        opacity: 0.7;
+    }
 
-  .btn.primary {
-    width: 100%; height: 46px; margin-top: 18px;
-    border: 0; border-radius: 10px; background: #2151ea; color: #fff;
-    font-weight: 600; font-size: 15px; cursor: pointer;
-    transition: transform .02s ease, opacity .15s ease;
-  }
-  .btn.primary:active { transform: translateY(1px); }
+    .btn.primary {
+        width: 100%;
+        height: 46px;
+        margin-top: 18px;
+        border: 0;
+        border-radius: 10px;
+        background: #2151ea;
+        color: #fff;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
+        transition:
+            transform 0.02s ease,
+            opacity 0.15s ease;
+    }
+    .btn.primary:active {
+        transform: translateY(1px);
+    }
+    .btn.primary[disabled] {
+        opacity: 0.7;
+        cursor: default;
+    }
 
-  .back {
-    margin-top: 10px;
-    appearance: none; background: transparent; border: 0;
-    color: #6b7280; font-size: 14px; cursor: pointer; display: block; width: 100%; text-align: center;
-  }
-  .back:hover { text-decoration: underline; }
+    .back {
+        margin-top: 10px;
+        appearance: none;
+        background: transparent;
+        border: 0;
+        color: #6b7280;
+        font-size: 14px;
+        cursor: pointer;
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+    .back:hover {
+        text-decoration: underline;
+    }
 
-  .footnote { text-align: center; margin: 14px 0 0; color: #6b7280; font-size: 13px; }
-  .link { color: #2151ea; text-decoration: none; }
-  .link:hover { text-decoration: underline; }
+    .footnote {
+        text-align: center;
+        margin: 14px 0 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+    .link {
+        color: #2151ea;
+        text-decoration: none;
+    }
+    .link:hover {
+        text-decoration: underline;
+    }
+
+    .submitted {
+        text-align: center;
+        padding: 12px 6px;
+    }
+    .submitted h3 {
+        margin: 6px 0 4px;
+    }
 </style>

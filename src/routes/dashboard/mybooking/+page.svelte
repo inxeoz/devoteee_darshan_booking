@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
+    import { getCookieByName } from "../../../helper.js";
 
     type Status = "Approved" | "Pending" | "Pending Verification" | "Completed";
 
@@ -131,7 +132,7 @@
             const res = await fetch(apiUrl, {
                 method: "GET",
                 headers: {
-                    auth_token: authToken,
+                    auth_token: getCookieByName("auth_token") || "",
                     Accept: "application/json",
                 },
             });
