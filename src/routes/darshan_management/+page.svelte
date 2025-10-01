@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import { onMount, createEventDispatcher } from "svelte";
     import BookingDetailsModal, {
         type BookingDetails,
     } from "./BookingDetailsModal.svelte";
@@ -22,8 +22,11 @@
     export type PendingRow = {
         id: string;
         kind: DarshanKind;
-        devotee: string;
-        dateISO: string; // yyyy-mm-dd
+        devotee: string | null;
+        dateISO: string; // yyyy-mm-dd (darshan_date)
+        time?: string; // darshan_time from API
+        workflow_state?: string;
+        raw?: any; // raw API object for details if needed
     };
 
     type Events = {
@@ -36,85 +39,57 @@
 
     const dispatch = createEventDispatcher<Events>();
 
-    // ---- Props (seeded with demo data for preview) ----
-    export let asOf = new Date();
-    export let summaries: Summary[] = [
+    // ---- Props (configurable) ----
+    // defaults taken from the curl you posted; override in parent for production
+    export let apiUrl =
+        "http://localhost:1880/get_list_of_appointments_admin?limit_start=1&limit_page_length=10";
+    export let authToken = "18ad6b1e9144a9069024092cfc2e47d0";
+    export let limitStart = 1;
+    export let pageLength = 10;
+
+    // ---- Local UI State ----
+    let asOf = new Date();
+    let loading = true;
+    let error: string | null = null;
+
+    // seeded defaults for preview (kept so UI doesn't break if API slow)
+    let summaries: Summary[] = [
         {
             kind: "VIP Darshan",
-            received: 2,
-            approved: 1,
-            rejected: 1,
+            received: 0,
+            approved: 0,
+            rejected: 0,
             accent: "red",
         },
         {
             kind: "Bhasm Arti",
-            received: 3,
-            approved: 1,
+            received: 0,
+            approved: 0,
             rejected: 0,
             accent: "red",
         },
         {
             kind: "Shigra Darshan",
-            received: 1,
-            approved: 1,
-            rejected: 1,
+            received: 0,
+            approved: 0,
+            rejected: 0,
             accent: "blue",
         },
         {
             kind: "Localide Darshan",
-            received: 1,
+            received: 0,
             approved: 0,
             rejected: 0,
             accent: "red",
         },
     ];
 
-    export let pending: PendingRow[] = [
-        {
-            id: "1001",
-            kind: "VIP Darshan",
-            devotee: "Ramesh Sharma",
-            dateISO: "2025-10-15",
-        },
-        {
-            id: "2001",
-            kind: "Bhasm Arti",
-            devotee: "Amit Varma",
-            dateISO: "2025-11-01",
-        },
-        {
-            id: "3003",
-            kind: "Shigra Darshan",
-            devotee: "Rajesh Kumar",
-            dateISO: "2025-10-07",
-        },
-        {
-            id: "2003",
-            kind: "Bhasm Arti",
-            devotee: "Vikas Gupta",
-            dateISO: "2025-10-10",
-        },
-        {
-            id: "1004",
-            kind: "VIP Darshan",
-            devotee: "Deepak Jain",
-            dateISO: "2025-10-12",
-        },
-        {
-            id: "2004",
-            kind: "Bhasm Arti",
-            devotee: "Geeta Iyer",
-            dateISO: "2025-10-08",
-        },
-        {
-            id: "4001",
-            kind: "Localide Darshan",
-            devotee: "Pooja Tiwari",
-            dateISO: "2025-10-20",
-        },
-    ];
+    let pending: PendingRow[] = [];
 
-    // ---- Local UI State ----
+    // map for quick lookup by id
+    let appointmentsMap: Record<string, any> = {};
+
+    // UI: selection & filters
     let selected: Set<string> = new Set();
     let selectAllChecked = false;
     let search = "";
@@ -130,6 +105,168 @@
         day: "2-digit",
     }); // yyyy-mm-dd
 
+    // ---- Utilities ----
+    function normalizeKind(apiKind: string): DarshanKind {
+        // API returns e.g. "Vip Darshan" — normalize to our DarshanKind values
+        const k = (apiKind || "").trim().toLowerCase();
+        if (k.includes("vip")) return "VIP Darshan";
+        if (k.includes("bhasm")) return "Bhasm Arti";
+        if (k.includes("shigra")) return "Shigra Darshan";
+        if (k.includes("localide")) return "Localide Darshan";
+        // fallback: prefer VIP Darshan as default to keep typing
+        return "VIP Darshan";
+    }
+
+    function accentForKind(k: DarshanKind) {
+        switch (k) {
+            case "VIP Darshan":
+                return "red";
+            case "Bhasm Arti":
+                return "red";
+            case "Shigra Darshan":
+                return "blue";
+            case "Localide Darshan":
+                return "indigo";
+            default:
+                return "blue";
+        }
+    }
+
+    // ---- Fetching & mapping API response ----
+    async function fetchAppointments() {
+        loading = true;
+        error = null;
+        try {
+            // build URL with query params (if parent overrides props)
+            const url = new URL(apiUrl);
+            // only set params if they don't already exist
+            if (!url.searchParams.has("limit_start"))
+                url.searchParams.set("limit_start", String(limitStart));
+            if (!url.searchParams.has("limit_page_length"))
+                url.searchParams.set("limit_page_length", String(pageLength));
+
+            const res = await fetch(url.toString(), {
+                headers: {
+                    auth_token: authToken,
+                    Accept: "application/json",
+                },
+            });
+
+            if (!res.ok) {
+                throw new Error(`API returned ${res.status} ${res.statusText}`);
+            }
+
+            const body = await res.json();
+
+            // expected structure: { message: { "Shigra Darshan": {...}, "Bhasm Arti": {...}, ... } }
+            const msg = body?.message ?? body;
+            if (!msg || typeof msg !== "object") {
+                throw new Error("Unexpected API response structure.");
+            }
+
+            // reset maps
+            appointmentsMap = {};
+            pending = [];
+
+            // Build summaries and pending list from API
+            const kinds: DarshanKind[] = [
+                "VIP Darshan",
+                "Bhasm Arti",
+                "Shigra Darshan",
+                "Localide Darshan",
+            ];
+            const newSummaries: Summary[] = [];
+
+            // The API keys may be "Vip Darshan", "Bhasm Arti", etc.
+            for (const key of Object.keys(msg)) {
+                const entry = msg[key];
+                const kind = normalizeKind(key);
+
+                const Received = Number(entry?.Pending ?? 0) || 0;
+                const Approved = Number(entry?.Approved ?? 0) || 0;
+                const Rejected = Number(entry?.Rejected ?? 0) || 0;
+
+                newSummaries.push({
+                    kind,
+                    received: Received,
+                    approved: Approved,
+                    rejected: Rejected,
+                    accent: accentForKind(kind),
+                });
+
+                const list: any[] = Array.isArray(entry?.["Appointment List"])
+                    ? entry["Appointment List"]
+                    : [];
+
+                for (const appt of list) {
+                    const id =
+                        appt?.name ??
+                        `${kind.replace(/\s+/g, "_")}_${Math.random().toString(36).slice(2, 8)}`;
+                    const darshan_date =
+                        appt?.darshan_date ?? appt?.date ?? null;
+                    const darshan_time = appt?.darshan_time ?? null;
+                    const devotee = appt?.attender ?? null;
+                    const workflow_state = appt?.workflow_state ?? null;
+                    const normalizedKind = normalizeKind(
+                        appt?.darshan_type ?? key,
+                    );
+
+                    const row: PendingRow = {
+                        id,
+                        kind: normalizedKind,
+                        devotee,
+                        dateISO:
+                            darshan_date ??
+                            new Date().toISOString().slice(0, 10),
+                        time: darshan_time ?? undefined,
+                        workflow_state,
+                        raw: appt,
+                    };
+
+                    pending.push(row);
+                    appointmentsMap[id] = appt;
+                }
+            }
+
+            // Ensure every known kind exists in summaries (so UI grid remains stable)
+            for (const k of kinds) {
+                if (!newSummaries.find((s) => s.kind === k)) {
+                    newSummaries.push({
+                        kind: k,
+                        received: 0,
+                        approved: 0,
+                        rejected: 0,
+                        accent: accentForKind(k),
+                    });
+                }
+            }
+
+            // Sort summaries to align with your desired order
+            const order = {
+                "VIP Darshan": 0,
+                "Bhasm Arti": 1,
+                "Shigra Darshan": 2,
+                "Localide Darshan": 3,
+            };
+            newSummaries.sort(
+                (a, b) => (order[a.kind] ?? 99) - (order[b.kind] ?? 99),
+            );
+
+            summaries = newSummaries;
+            asOf = new Date();
+        } catch (err: any) {
+            console.error("fetchAppointments error", err);
+            error = err?.message ?? String(err);
+        } finally {
+            loading = false;
+        }
+    }
+
+    onMount(() => {
+        // fetch immediately on mount
+        fetchAppointments();
+    });
+
     // ---- Derived ----
     $: filtered = pending
         .filter((r) => (kindFilter ? r.kind === kindFilter : true))
@@ -138,8 +275,8 @@
             if (!q) return true;
             return (
                 r.id.toLowerCase().includes(q) ||
-                r.kind.toLowerCase().includes(q) ||
-                r.devotee.toLowerCase().includes(q)
+                (r.kind && r.kind.toLowerCase().includes(q)) ||
+                (r.devotee && r.devotee.toLowerCase().includes(q))
             );
         });
 
@@ -166,40 +303,31 @@
         dispatch("reject", { id });
     }
 
-    // Build data for the modal (replace with API fetch in real app)
+    // Build data for the modal (from the raw API row if present)
     function buildBookingDetails(row: PendingRow): BookingDetails {
+        const raw = row.raw ?? appointmentsMap[row.id] ?? {};
         return {
             id: row.id,
             type: `${row.kind} Booking`,
             visitDateISO: row.dateISO,
-            protocol:
-                row.kind === "VIP Darshan"
-                    ? "Joint Secretary, MP Govt."
-                    : undefined,
+            protocol: raw?.protocol ?? raw?.darshan_type ?? undefined,
             primary: {
-                name: row.devotee,
-                age: row.kind === "VIP Darshan" ? 45 : 40,
-                gender: "Male",
-                docs: [{ label: "Aadhar Card", maskedId: "1234xxxx9012" }],
+                name: row.devotee ?? raw?.attender ?? "Unknown",
+                age: raw?.age ?? (row.kind === "VIP Darshan" ? 45 : 40),
+                gender: raw?.gender ?? "Male",
+                docs: raw?.docs ?? [
+                    {
+                        label: "ID",
+                        maskedId: (raw?.name ?? row.id).slice(0, 4) + "xxxx",
+                    },
+                ],
                 badge: "Primary Devotee",
             },
-            companions: [
-                {
-                    name: "Priya Sharma",
-                    age: 40,
-                    gender: "Female",
-                    docs: [{ label: "Voter ID", maskedId: "XYZ987xxxx21" }],
-                },
-                {
-                    name: "Ankit Sharma",
-                    age: 12,
-                    gender: "Male",
-                    docs: [
-                        { label: "Birth Certificate", maskedId: "BC-00xxxx34" },
-                    ],
-                },
-            ],
-            supportingDocumentUrl: "/api/document/sample.pdf",
+            companions: raw?.companions ?? [],
+            supportingDocumentUrl:
+                raw?.supportingDocumentUrl ??
+                raw?.document_url ??
+                "/api/document/sample.pdf",
             supportingDocumentLabel: "View Document",
         };
     }
@@ -245,6 +373,17 @@
     </header>
 
     <h3 class="block-title">Booking Summaries</h3>
+
+    {#if loading}
+        <div style="padding:12px 0; color:#374151;">
+            Loading appointments...
+        </div>
+    {:else if error}
+        <div style="padding:12px; color:#b91c1c;">
+            Error loading appointments: {error}
+        </div>
+    {/if}
+
     <section class="cards">
         {#each summaries as s}
             <article
@@ -356,8 +495,12 @@
                                     .toLowerCase()}">{r.kind}</span
                             ></td
                         >
-                        <td>{r.devotee}</td>
-                        <td>{fmtDate.format(new Date(r.dateISO))}</td>
+                        <td>{r.devotee ?? "—"}</td>
+                        <td
+                            >{fmtDate.format(new Date(r.dateISO))}{r.time
+                                ? ` • ${r.time}`
+                                : ""}</td
+                        >
                         <td class="actions">
                             <button
                                 class="link green"
@@ -406,6 +549,7 @@
 </div>
 
 <style>
+    /* keep your original styles (omitted here for brevity in the preview answer) */
     .wrap {
         padding: 18px 18px 28px;
         background: #f6f7f9;
