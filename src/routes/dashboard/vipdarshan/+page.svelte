@@ -2,6 +2,7 @@
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
     import { onMount } from "svelte";
+    import { getCookieByName } from "../../../helper.js";
 
     // ----- Types -----
     export type Protocol = {
@@ -187,7 +188,7 @@
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        auth_token: "18ad6b1e9144a9069024092cfc2e47d0",
+                        auth_token: getCookieByName("auth_token") || "",
                     },
                     body: JSON.stringify(payload),
                 },
