@@ -115,14 +115,9 @@
             ></span>
         </div>
 
-        <h2 class="heading">Complete Your Profile</h2>
-        <p class="copy">
-            Please provide a few more details to finish your registration.
-        </p>
-
         {#if submitted}
             <div class="submitted">
-                <h3>Successfully applied for appointment</h3>
+                <h3>Successfully Updated Profile details</h3>
                 {#if serverMessage}
                     <p class="copy">
                         {serverMessage}
@@ -137,6 +132,10 @@
                 >
             </div>
         {:else}
+            <h2 class="heading">Complete Your Profile</h2>
+            <p class="copy">
+                Please provide a few more details to finish your registration.
+            </p>
             <form on:submit|preventDefault={handleSubmit} novalidate>
                 <!-- Full Name -->
                 <label class="label" for="name">Full Name</label>
