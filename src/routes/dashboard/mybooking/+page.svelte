@@ -2,11 +2,11 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
-    import { getCookieByName } from "../../../helper.js";
+    import { getCookieByName, loadBookings } from "../../../helper.js";
 
     type Status = "Approved" | "Pending" | "Pending Verification" | "Completed";
 
-    export type Booking = {
+    type Booking = {
         id: string;
         title: string; // e.g. "Shigra Darshan"
         status: Status;
@@ -19,15 +19,9 @@
         open: { id: string };
     };
 
-    const dispatch = createEventDispatcher<Events>();
-
     export let heading = "My Bookings";
     export let subtitle = "View your upcoming and past darshan bookings.";
     export let sectionTitle = "My Bookings";
-
-    // API configuration (can be overridden by parent)
-    export let apiUrl: string = "http://localhost:1880/get_appointment_list";
-    export let authToken: string = "18ad6b1e9144a9069024092cfc2e47d0";
 
     // UI state
     let loading = false;
@@ -66,9 +60,6 @@
                 return "badge gray";
         }
     }
-
-    const open = (id: string) => dispatch("open", { id });
-    const back = () => dispatch("back");
 
     // Convert API row to Booking
     function mapApiRowToBooking(row: any): Booking {
@@ -125,47 +116,25 @@
         return { up, pa };
     }
 
-    async function loadBookings() {
+    async function FetchBookings() {
         loading = true;
         error = null;
-        try {
-            const res = await fetch(apiUrl, {
-                method: "GET",
-                headers: {
-                    auth_token: getCookieByName("auth_token") || "",
-                    Accept: "application/json",
-                },
-            });
 
-            if (!res.ok) {
-                const txt = await res.text();
-                throw new Error(`HTTP ${res.status}: ${txt}`);
-            }
+        const data = await loadBookings();
+        const rows = Array.isArray(data)
+            ? data
+            : Array.isArray(data.message)
+              ? data.message
+              : [];
+        const bookings = rows.map(mapApiRowToBooking);
 
-            const payload = await res.json();
-            // You showed an example where the response is { "message": [ ...rows... ] }
-            // Be defensive: allow either top-level array or { message: array }
-            const rows = Array.isArray(payload)
-                ? payload
-                : Array.isArray(payload.message)
-                  ? payload.message
-                  : [];
-            const bookings = rows.map(mapApiRowToBooking);
-
-            const { up, pa } = splitBookings(bookings);
-            upcoming = up;
-            past = pa;
-        } catch (err: any) {
-            console.error("Failed to load bookings", err);
-            error = err?.message ?? String(err);
-            // keep existing data if any
-        } finally {
-            loading = false;
-        }
+        const { up, pa } = splitBookings(bookings);
+        upcoming = up;
+        past = pa;
     }
 
     onMount(() => {
-        loadBookings();
+        FetchBookings();
     });
 </script>
 
@@ -187,7 +156,7 @@
                 <button
                     class="link"
                     type="button"
-                    on:click={loadBookings}
+                    on:click={FetchBookings}
                     aria-label="Refresh bookings"
                 >
                     {#if loading}

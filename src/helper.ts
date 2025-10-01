@@ -78,3 +78,28 @@ export async function verify_token_and_get_token(phone: number, otp: string) {
     return null;
   }
 }
+
+export async function loadBookings() {
+  try {
+    const res = await fetch("http://localhost:1880/get_appointment_list", {
+      method: "GET",
+      headers: {
+        auth_token: getCookieByName("auth_token") || "",
+        Accept: "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
+    const data = await res.json();
+
+    return data;
+  } catch (err: any) {
+    console.error("Failed to load bookings", err);
+    return null;
+    // keep existing data if any
+  }
+}
