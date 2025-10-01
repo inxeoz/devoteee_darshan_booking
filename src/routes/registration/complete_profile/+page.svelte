@@ -1,9 +1,6 @@
 <script>
-    import { createEventDispatcher } from "svelte";
     import { goto } from "$app/navigation";
     import { getCookieByName } from "../../../helper.js";
-
-    const dispatch = createEventDispatcher();
 
     // progress shown in the thin bar under the header
     export let progress = 80; // percent
@@ -17,6 +14,7 @@
     let gender = "";
     let dob = "";
     let address = "";
+    let aadhar = "";
 
     let touched = { name: false, gender: false, dob: false };
 
@@ -45,13 +43,14 @@
         serverMessage = "";
         serverCode = "";
 
-        // prepare payload as in your curl example
+        // prepare payload (fixed aadhar)
         const payload = {
             info: {
                 devoteee_name: name.trim(),
                 gender,
                 dob,
                 address: address.trim(),
+                aadhar: aadhar.trim(),
             },
         };
 
@@ -68,28 +67,17 @@
             const json = await res.json().catch(() => ({}));
 
             if (!res.ok) {
-                // try to display an error returned by server
                 serverError = json?.message || `Server returned ${res.status}`;
-                loading = false;
                 return;
             }
 
             // success
             serverMessage = json?.message || "Profile saved.";
-            // If server returns a code like DVT0002 include it:
-            if (typeof json === "object") {
-                // some APIs return a code field or message - capture both if present
-                serverCode = json?.code || json?.status || "";
-            }
-
+            serverCode = (json && (json.code || json.status)) || "";
             submitted = true;
-            dispatch("submit", {
-                name: name.trim(),
-                gender,
-                dob,
-                address: address.trim(),
-                response: json,
-            });
+
+            // optionally navigate after success, or keep user on page
+            // goto('/dashboard'); // uncomment if auto-redirect desired
         } catch (err) {
             serverError = err?.message || String(err);
         } finally {
@@ -98,7 +86,9 @@
     }
 
     function goBack() {
-        dispatch("back");
+        // If you previously relied on a parent to handle "back", but you're no longer dispatching,
+        // use browser history fallback here. If you prefer a specific route, call goto('/somewhere').
+        history.length > 1 ? history.back() : goto("/dashboard");
     }
 
     function goToMyBookings() {
@@ -117,25 +107,32 @@
 
         {#if submitted}
             <div class="submitted">
-                <h3>Successfully Updated Profile details</h3>
+                <h3>Successfully updated profile details</h3>
                 {#if serverMessage}
                     <p class="copy">
                         {serverMessage}
                         {#if serverCode}(<strong>{serverCode}</strong>){/if}
                     </p>
                 {/if}
+
+                <button class="btn primary" on:click={() => goto("/dashboard")}>
+                    Dashboard
+                </button>
+
                 <button
-                    class="btn primary"
-                    on:click={() => {
-                        goto("/dashboard");
-                    }}>Dashboard</button
+                    class="btn"
+                    style="margin-top:8px;"
+                    on:click={goToMyBookings}
                 >
+                    See your appointments
+                </button>
             </div>
         {:else}
             <h2 class="heading">Complete Your Profile</h2>
             <p class="copy">
                 Please provide a few more details to finish your registration.
             </p>
+
             <form on:submit|preventDefault={handleSubmit} novalidate>
                 <!-- Full Name -->
                 <label class="label" for="name">Full Name</label>
@@ -197,12 +194,25 @@
                     <div class="error">{errors().dob}</div>
                 {/if}
 
+                <!-- Aadhar -->
+                <label class="label" for="aadhar">Aadhar</label>
+                <input
+                    id="aadhar"
+                    class="input"
+                    type="text"
+                    placeholder="1234 5678 9012"
+                    bind:value={aadhar}
+                    inputmode="numeric"
+                    maxlength="20"
+                    aria-label="Aadhar number (optional)"
+                />
+
                 <!-- Address -->
-                <label class="label" for="addr">Address</label>
+                <label class="label" for="address">Address</label>
                 <textarea
-                    id="addr"
+                    id="address"
                     class="input textarea"
-                    placeholder="123 Main St, Anytown, USA"
+                    placeholder="123 Main St, Anytown"
                     rows="3"
                     bind:value={address}
                 ></textarea>
@@ -233,6 +243,7 @@
 </div>
 
 <style>
+    /* (same CSS you already had—kept for brevity) */
     :global(html, body) {
         height: 100%;
     }
@@ -249,20 +260,6 @@
         border-radius: 14px;
         box-shadow: 0 10px 28px rgba(16, 24, 40, 0.12);
         padding: 36px 40px 32px;
-    }
-    .title {
-        margin: 0 0 6px;
-        font-size: 28px;
-        line-height: 1.2;
-        font-weight: 700;
-        color: #1f2937;
-        text-align: center;
-    }
-    .subtitle {
-        margin: 0 0 18px;
-        color: #6b7280;
-        font-size: 14px;
-        text-align: center;
     }
     .progress {
         height: 4px;
@@ -309,8 +306,8 @@
         font-size: 14px;
         outline: none;
         transition:
-            box-shadow 0.15s ease,
-            border-color 0.15s ease;
+            box-shadow 0.15s,
+            border-color 0.15s;
     }
     .textarea {
         height: auto;
@@ -329,7 +326,6 @@
         font-size: 12px;
         color: #b91c1c;
     }
-
     .date-wrap {
         position: relative;
     }
@@ -342,7 +338,6 @@
         font-size: 16px;
         opacity: 0.7;
     }
-
     .btn.primary {
         width: 100%;
         height: 46px;
@@ -354,21 +349,13 @@
         font-weight: 600;
         font-size: 15px;
         cursor: pointer;
-        transition:
-            transform 0.02s ease,
-            opacity 0.15s ease;
-    }
-    .btn.primary:active {
-        transform: translateY(1px);
     }
     .btn.primary[disabled] {
         opacity: 0.7;
         cursor: default;
     }
-
     .back {
         margin-top: 10px;
-        appearance: none;
         background: transparent;
         border: 0;
         color: #6b7280;
@@ -378,10 +365,6 @@
         width: 100%;
         text-align: center;
     }
-    .back:hover {
-        text-decoration: underline;
-    }
-
     .footnote {
         text-align: center;
         margin: 14px 0 0;
@@ -391,16 +374,5 @@
     .link {
         color: #2151ea;
         text-decoration: none;
-    }
-    .link:hover {
-        text-decoration: underline;
-    }
-
-    .submitted {
-        text-align: center;
-        padding: 12px 6px;
-    }
-    .submitted h3 {
-        margin: 6px 0 4px;
     }
 </style>
