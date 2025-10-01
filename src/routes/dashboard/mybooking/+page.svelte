@@ -33,23 +33,9 @@
     let error: string | null = null;
 
     // Bookings arrays (initial sample data kept for preview; will be replaced on fetch)
-    export let upcoming: Booking[] = [
-        {
-            id: "123456",
-            title: "Shigra Darshan",
-            status: "Approved",
-            datetime: "2025-12-25T10:30:00",
-        },
-    ];
+    export let upcoming: Booking[] = [];
 
-    export let past: Booking[] = [
-        {
-            id: "789010",
-            title: "Localide Darshan",
-            status: "Completed",
-            datetime: "2024-05-10T14:00:00",
-        },
-    ];
+    export let past: Booking[] = [];
 
     const fmt = new Intl.DateTimeFormat("en-GB", {
         year: "numeric",
@@ -65,15 +51,17 @@
         return `Date/Time: ${fmt.format(d)}${note ? ` at ${note}` : ""}`;
     }
 
-    function badgeClass(status: Status) {
+    function badgeClass(status: string) {
         switch (status) {
             case "Approved":
                 return "badge green";
             case "Pending":
-                return "badge gray";
+                return "badge blue";
             case "Pending Verification":
                 return "badge indigo";
             case "Completed":
+                return "badge gray";
+            case "Draft":
                 return "badge gray";
         }
     }
