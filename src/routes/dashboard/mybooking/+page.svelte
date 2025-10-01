@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
 
@@ -23,32 +24,21 @@
     export let subtitle = "View your upcoming and past darshan bookings.";
     export let sectionTitle = "My Bookings";
 
-    // Provide data from parent; seeded with sample rows for quick preview.
+    // API configuration (can be overridden by parent)
+    export let apiUrl: string = "http://localhost:1880/get_appointment_list";
+    export let authToken: string = "18ad6b1e9144a9069024092cfc2e47d0";
+
+    // UI state
+    let loading = false;
+    let error: string | null = null;
+
+    // Bookings arrays (initial sample data kept for preview; will be replaced on fetch)
     export let upcoming: Booking[] = [
         {
             id: "123456",
             title: "Shigra Darshan",
             status: "Approved",
             datetime: "2025-12-25T10:30:00",
-        },
-        {
-            id: "345678",
-            title: "Bhasm Arti",
-            status: "Pending",
-            datetime: "2025-11-01T04:00:00",
-        },
-        {
-            id: "901234",
-            title: "VIP Darshan",
-            status: "Approved",
-            datetime: "2025-10-01T12:00:00",
-        },
-        {
-            id: "RJWQ250",
-            title: "VIP Darshan (Protocol)",
-            status: "Pending Verification",
-            datetime: "2025-09-30T00:00:00",
-            timeNote: "Flexible Time",
         },
     ];
 
@@ -90,6 +80,104 @@
 
     const open = (id: string) => dispatch("open", { id });
     const back = () => dispatch("back");
+
+    // Convert API row to Booking
+    function mapApiRowToBooking(row: any): Booking {
+        // API fields from your example:
+        // { "name":"DA00008","darshan_date":"2025-10-05","darshan_time":"7:30:00","darshan_type":"Vip Darshan",...,"workflow_state":"Pending"}
+        const datePart = row.darshan_date ?? "";
+        const timePart = row.darshan_time ?? "00:00:00";
+
+        // Try build full ISO string using local timezone assumption.
+        // If darshan_date is 'YYYY-MM-DD' and timePart is 'HH:mm:ss'
+        let iso = "";
+        try {
+            // Construct "YYYY-MM-DDTHH:mm:ss" — treat as local time by not appending Z
+            iso = `${datePart}T${timePart}`;
+            // validate
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) {
+                // fallback to just date
+                iso = `${datePart}T00:00:00`;
+            }
+        } catch {
+            iso = `${datePart}T00:00:00`;
+        }
+
+        return {
+            id: row.name ?? String(Math.random()).slice(2),
+            title: row.darshan_type ?? "Darshan",
+            status: row.workflow_state,
+            datetime: iso,
+            // show a time note if provided by API (none in example)
+            timeNote: row.time_note ?? row.timeNote ?? undefined,
+        };
+    }
+
+    // Split bookings into upcoming vs past relative to now
+    function splitBookings(all: Booking[]) {
+        const now = Date.now();
+        const up: Booking[] = [];
+        const pa: Booking[] = [];
+        for (const b of all) {
+            const t = new Date(b.datetime).getTime();
+            if (!isNaN(t) && t >= now) up.push(b);
+            else pa.push(b);
+        }
+        // sort upcoming ascending by date, past descending
+        up.sort(
+            (a, b) =>
+                new Date(a.datetime).getTime() - new Date(b.datetime).getTime(),
+        );
+        pa.sort(
+            (a, b) =>
+                new Date(b.datetime).getTime() - new Date(a.datetime).getTime(),
+        );
+        return { up, pa };
+    }
+
+    async function loadBookings() {
+        loading = true;
+        error = null;
+        try {
+            const res = await fetch(apiUrl, {
+                method: "GET",
+                headers: {
+                    auth_token: authToken,
+                    Accept: "application/json",
+                },
+            });
+
+            if (!res.ok) {
+                const txt = await res.text();
+                throw new Error(`HTTP ${res.status}: ${txt}`);
+            }
+
+            const payload = await res.json();
+            // You showed an example where the response is { "message": [ ...rows... ] }
+            // Be defensive: allow either top-level array or { message: array }
+            const rows = Array.isArray(payload)
+                ? payload
+                : Array.isArray(payload.message)
+                  ? payload.message
+                  : [];
+            const bookings = rows.map(mapApiRowToBooking);
+
+            const { up, pa } = splitBookings(bookings);
+            upcoming = up;
+            past = pa;
+        } catch (err: any) {
+            console.error("Failed to load bookings", err);
+            error = err?.message ?? String(err);
+            // keep existing data if any
+        } finally {
+            loading = false;
+        }
+    }
+
+    onMount(() => {
+        loadBookings();
+    });
 </script>
 
 <div class="page">
@@ -99,59 +187,91 @@
 
         <div class="row">
             <h2 class="section">{sectionTitle}</h2>
-            <button
-                class="link"
-                type="button"
-                on:click={() => {
-                    goto("/dashboard");
-                }}>← Back to Dashboard</button
-            >
+            <div style="display:flex; gap:10px; align-items:center">
+                <button
+                    class="link"
+                    type="button"
+                    on:click={() => {
+                        goto("/dashboard");
+                    }}>← Back to Dashboard</button
+                >
+                <button
+                    class="link"
+                    type="button"
+                    on:click={loadBookings}
+                    aria-label="Refresh bookings"
+                >
+                    {#if loading}
+                        Refreshing...
+                    {:else}
+                        Refresh
+                    {/if}
+                </button>
+            </div>
         </div>
+
+        {#if error}
+            <div style="color: #b91c1c; margin-bottom:12px">
+                Error loading bookings: {error}
+            </div>
+        {/if}
 
         <h3 class="subhead">Upcoming Bookings</h3>
         <div class="list">
-            {#each upcoming as b}
-                <button
-                    class="item"
-                    type="button"
-                    on:click={() => open(b.id)}
-                    aria-label={`Open booking ${b.id}`}
-                >
-                    <div class="left">
-                        <div class="name">{b.title}</div>
-                        <div class="meta">Booking ID: {b.id}</div>
-                        <div class="meta">
-                            {formatDate(b.datetime, b.timeNote)}
+            {#if loading && upcoming.length === 0}
+                <div class="empty">Loading upcoming bookings…</div>
+            {:else}
+                {#each upcoming as b}
+                    <button
+                        class="item"
+                        type="button"
+                        on:click={() => open(b.id)}
+                        aria-label={`Open booking ${b.id}`}
+                    >
+                        <div class="left">
+                            <div class="name">{b.title}</div>
+                            <div class="meta">Booking ID: {b.id}</div>
+                            <div class="meta">
+                                {formatDate(b.datetime, b.timeNote)}
+                            </div>
                         </div>
-                    </div>
-                    <div class="right">
-                        <span class={badgeClass(b.status)}>{b.status}</span>
-                    </div>
-                </button>
-            {/each}
-            {#if upcoming.length === 0}
-                <div class="empty">No upcoming bookings.</div>
+                        <div class="right">
+                            <span class={badgeClass(b.status)}>{b.status}</span>
+                        </div>
+                    </button>
+                {/each}
+                {#if upcoming.length === 0 && !loading}
+                    <div class="empty">No upcoming bookings.</div>
+                {/if}
             {/if}
         </div>
 
         <h3 class="subhead">Past Bookings</h3>
         <div class="list">
-            {#each past as b}
-                <button class="item" type="button" on:click={() => open(b.id)}>
-                    <div class="left">
-                        <div class="name">{b.title}</div>
-                        <div class="meta">Booking ID: {b.id}</div>
-                        <div class="meta">
-                            {formatDate(b.datetime, b.timeNote)}
+            {#if loading && past.length === 0}
+                <div class="empty">Loading past bookings…</div>
+            {:else}
+                {#each past as b}
+                    <button
+                        class="item"
+                        type="button"
+                        on:click={() => open(b.id)}
+                    >
+                        <div class="left">
+                            <div class="name">{b.title}</div>
+                            <div class="meta">Booking ID: {b.id}</div>
+                            <div class="meta">
+                                {formatDate(b.datetime, b.timeNote)}
+                            </div>
                         </div>
-                    </div>
-                    <div class="right">
-                        <span class={badgeClass(b.status)}>{b.status}</span>
-                    </div>
-                </button>
-            {/each}
-            {#if past.length === 0}
-                <div class="empty">No past bookings.</div>
+                        <div class="right">
+                            <span class={badgeClass(b.status)}>{b.status}</span>
+                        </div>
+                    </button>
+                {/each}
+                {#if past.length === 0 && !loading}
+                    <div class="empty">No past bookings.</div>
+                {/if}
             {/if}
         </div>
     </div>
