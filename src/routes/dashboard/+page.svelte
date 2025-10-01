@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { getCookieByName } from "../../helper.js";
+    import { getCookieByName, getProfileDetails } from "../../helper.js";
     import { goto } from "$app/navigation";
 
     const dispatch = createEventDispatcher();
@@ -50,32 +50,15 @@
         if (site) goto(site);
     }
 
-    onMount(() => {
-        getProfileDetails();
-    });
-
-    async function getProfileDetails() {
-        try {
-            const res = await fetch(
-                "http://localhost:1880/get_profile_details",
-                {
-                    headers: {
-                        auth_token: getCookieByName("auth_token") || "",
-                    },
-                },
-            );
-
-            if (!res.ok) throw new Error("Network response was not ok");
-
-            const data = await res.json();
+    onMount(async () => {
+        const data = await getProfileDetails();
+        if (data !== null) {
             devoteee_details = data.message;
             devoteee_name = data.message.devoteee_name || "";
 
             console.log(data.message);
-        } catch (err) {
-            console.error("Error fetching profile details:", err);
         }
-    }
+    });
 
     function complete_kyc() {
         goto("/registration/complete_profile");
