@@ -2,21 +2,29 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
-    import { getCookieByName, loadBookings } from "../../../helper.js";
+    import { get_appointment_list } from "../../../helper.js";
+    import ShowAppointment from "./ShowAppointment.svelte";
 
-    type Status = "Approved" | "Pending" | "Pending Verification" | "Completed";
+    export let limitStart = 0;
+    export let pageLength = 10;
+
+    // ---- Types ----
+    type Status =
+        | "Approved"
+        | "Pending"
+        | "Pending Verification"
+        | "Completed"
+        | "Draft";
 
     type Booking = {
-        id: string;
-        title: string; // e.g. "Shigra Darshan"
-        status: Status;
-        datetime: string; // ISO date string
+        name: string; // display title
+        darshan_type: string; // e.g. "Shigra Darshan"
+        darshan_time: string; // e.g. "10:00 AM" (or "10:00")
+        workflow_state: Status;
+        darshan_date: string; // ISO date string (YYYY-MM-DD or full ISO)
         timeNote?: string; // e.g. "Flexible Time"
-    };
-
-    type Events = {
-        back: void;
-        open: { id: string };
+        darshan_companion: { name: string; phone: number; gender: string }[];
+        attender: string;
     };
 
     export let heading = "My Bookings";
@@ -27,26 +35,18 @@
     let loading = false;
     let error: string | null = null;
 
-    // Bookings arrays (initial sample data kept for preview; will be replaced on fetch)
+    // Data
     export let upcoming: Booking[] = [];
-
     export let past: Booking[] = [];
 
-    const fmt = new Intl.DateTimeFormat("en-GB", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-    });
+    // Modal state for <ShowAppointment>
+    let showDetails = false;
+    let selected: Booking | null = null;
 
-    function formatDate(s: string, note?: string) {
-        const d = new Date(s);
-        return `Date/Time: ${fmt.format(d)}${note ? ` at ${note}` : ""}`;
-    }
+    const dispatch = createEventDispatcher();
 
-    function badgeClass(status: string) {
+    // ---- Helpers ----
+    function badgeClass(status: Status) {
         switch (status) {
             case "Approved":
                 return "badge green";
@@ -55,82 +55,105 @@
             case "Pending Verification":
                 return "badge indigo";
             case "Completed":
-                return "badge gray";
             case "Draft":
                 return "badge gray";
         }
     }
 
-    // Convert API row to Booking
-    function mapApiRowToBooking(row: any): Booking {
-        // API fields from your example:
-        // { "name":"DA00008","darshan_date":"2025-10-05","darshan_time":"7:30:00","darshan_type":"Vip Darshan",...,"workflow_state":"Pending"}
-        const datePart = row.darshan_date ?? "";
-        const timePart = row.darshan_time ?? "00:00:00";
+    // Join date + time into a JS Date (best-effort, tolerant of formats)
+    function toDate(b: Booking): Date | null {
+        const datePart = b.darshan_date?.trim();
+        const timePart = b.darshan_time?.trim();
+        if (!datePart && !timePart) return null;
 
-        // Try build full ISO string using local timezone assumption.
-        // If darshan_date is 'YYYY-MM-DD' and timePart is 'HH:mm:ss'
-        let iso = "";
-        try {
-            // Construct "YYYY-MM-DDTHH:mm:ss" — treat as local time by not appending Z
-            iso = `${datePart}T${timePart}`;
-            // validate
-            const d = new Date(iso);
-            if (Number.isNaN(d.getTime())) {
-                // fallback to just date
-                iso = `${datePart}T00:00:00`;
-            }
-        } catch {
-            iso = `${datePart}T00:00:00`;
+        // Try "YYYY-MM-DDTHH:mm" first if both exist
+        if (datePart && timePart) {
+            // Normalize common time formats (e.g., "10:00 AM" -> "10:00 AM")
+            const dt1 = new Date(`${datePart} ${timePart}`);
+            if (!isNaN(+dt1)) return dt1;
+
+            const dt2 = new Date(`${datePart}T${timePart}`);
+            if (!isNaN(+dt2)) return dt2;
         }
 
-        return {
-            id: row.name ?? String(Math.random()).slice(2),
-            title: row.darshan_type ?? "Darshan",
-            status: row.workflow_state,
-            datetime: iso,
-            // show a time note if provided by API (none in example)
-            timeNote: row.time_note ?? row.timeNote ?? undefined,
-        };
+        // Fall back to either piece
+        const d1 = datePart ? new Date(datePart) : null;
+        if (d1 && !isNaN(+d1)) return d1;
+
+        const d2 = timePart ? new Date(timePart) : null;
+        if (d2 && !isNaN(+d2)) return d2;
+
+        return null;
     }
 
-    // Split bookings into upcoming vs past relative to now
     function splitBookings(all: Booking[]) {
         const now = Date.now();
         const up: Booking[] = [];
         const pa: Booking[] = [];
         for (const b of all) {
-            const t = new Date(b.datetime).getTime();
-            if (!isNaN(t) && t >= now) up.push(b);
+            const t = toDate(b)?.getTime();
+            if (typeof t === "number" && !isNaN(t) && t >= now) up.push(b);
             else pa.push(b);
         }
-        // sort upcoming ascending by date, past descending
+        // sort upcoming ascending by datetime, past descending
         up.sort(
-            (a, b) =>
-                new Date(a.datetime).getTime() - new Date(b.datetime).getTime(),
+            (a, b) => (toDate(a)?.getTime() ?? 0) - (toDate(b)?.getTime() ?? 0),
         );
         pa.sort(
-            (a, b) =>
-                new Date(b.datetime).getTime() - new Date(a.datetime).getTime(),
+            (a, b) => (toDate(b)?.getTime() ?? 0) - (toDate(a)?.getTime() ?? 0),
         );
         return { up, pa };
+    }
+
+    function formatDate(b: Booking) {
+        const d = toDate(b);
+        if (!d) return b.timeNote ? b.timeNote : "—";
+        try {
+            // Adjust locale/format as needed:
+            const date = new Intl.DateTimeFormat(undefined, {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "2-digit",
+            }).format(d);
+            const time = new Intl.DateTimeFormat(undefined, {
+                hour: "2-digit",
+                minute: "2-digit",
+            }).format(d);
+            return `${date} • ${time}${b.timeNote ? ` (${b.timeNote})` : ""}`;
+        } catch {
+            return d.toLocaleString();
+        }
+    }
+
+    function openDetails(b: Booking) {
+        selected = b;
+        showDetails = true;
+        // If you prefer navigation instead of a modal, replace with:
+        // goto(`/bookings/${encodeURIComponent(b.name)}`);
     }
 
     async function FetchBookings() {
         loading = true;
         error = null;
+        try {
+            const data = await get_appointment_list(limitStart, pageLength);
 
-        const data = await loadBookings();
-        const rows = Array.isArray(data)
-            ? data
-            : Array.isArray(data.message)
-              ? data.message
-              : [];
-        const bookings = rows.map(mapApiRowToBooking);
+            // The helper may return either an array directly or { message: [...] }
+            const bookings: Booking[] = Array.isArray(data)
+                ? data
+                : Array.isArray((data as any)?.message)
+                  ? (data as any).message
+                  : [];
 
-        const { up, pa } = splitBookings(bookings);
-        upcoming = up;
-        past = pa;
+            const { up, pa } = splitBookings(bookings);
+            upcoming = up;
+            past = pa;
+        } catch (e: any) {
+            error = e?.message ?? "Unknown error";
+        } finally {
+            loading = false;
+        }
     }
 
     onMount(() => {
@@ -149,21 +172,18 @@
                 <button
                     class="link"
                     type="button"
-                    on:click={() => {
-                        goto("/dashboard");
-                    }}>← Back to Dashboard</button
+                    on:click={() => goto("/dashboard")}
                 >
+                    ← Back to Dashboard
+                </button>
                 <button
                     class="link"
                     type="button"
                     on:click={FetchBookings}
                     aria-label="Refresh bookings"
+                    disabled={loading}
                 >
-                    {#if loading}
-                        Refreshing...
-                    {:else}
-                        Refresh
-                    {/if}
+                    {#if loading}Refreshing...{:else}Refresh{/if}
                 </button>
             </div>
         </div>
@@ -183,18 +203,18 @@
                     <button
                         class="item"
                         type="button"
-                        on:click={() => open(b.id)}
-                        aria-label={`Open booking ${b.id}`}
+                        on:click={() => openDetails(b)}
+                        aria-label={`Open booking ${b.name}`}
                     >
                         <div class="left">
-                            <div class="name">{b.title}</div>
-                            <div class="meta">Booking ID: {b.id}</div>
-                            <div class="meta">
-                                {formatDate(b.datetime, b.timeNote)}
-                            </div>
+                            <div class="name">{b.name}</div>
+                            <div class="meta">Darshan: {b.darshan_type}</div>
+                            <div class="meta">{formatDate(b)}</div>
                         </div>
                         <div class="right">
-                            <span class={badgeClass(b.status)}>{b.status}</span>
+                            <span class={badgeClass(b.workflow_state)}
+                                >{b.workflow_state}</span
+                            >
                         </div>
                     </button>
                 {/each}
@@ -213,17 +233,18 @@
                     <button
                         class="item"
                         type="button"
-                        on:click={() => open(b.id)}
+                        on:click={() => openDetails(b)}
+                        aria-label={`Open booking ${b.name}`}
                     >
                         <div class="left">
-                            <div class="name">{b.title}</div>
-                            <div class="meta">Booking ID: {b.id}</div>
-                            <div class="meta">
-                                {formatDate(b.datetime, b.timeNote)}
-                            </div>
+                            <div class="name">{b.name}</div>
+                            <div class="meta">Darshan: {b.darshan_type}</div>
+                            <div class="meta">{formatDate(b)}</div>
                         </div>
                         <div class="right">
-                            <span class={badgeClass(b.status)}>{b.status}</span>
+                            <span class={badgeClass(b.workflow_state)}
+                                >{b.workflow_state}</span
+                            >
                         </div>
                     </button>
                 {/each}
@@ -234,6 +255,15 @@
         </div>
     </div>
 </div>
+
+{#if showDetails && selected}
+    <!-- Expect ShowAppointment to accept `booking` and dispatch `close` -->
+    <ShowAppointment
+        {selected}
+        booking={selected}
+        on:close={() => (showDetails = false)}
+    />
+{/if}
 
 <style>
     :global(html, body) {
@@ -361,6 +391,11 @@
         background: #eef2ff;
         color: #4338ca;
         border-color: #c7d2fe;
+    }
+    .badge.blue {
+        background: #eff6ff;
+        color: #1e40af;
+        border-color: #bfdbfe;
     }
 
     .empty {

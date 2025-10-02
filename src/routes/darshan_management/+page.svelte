@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
-    import { getCookieByName } from "../../helper.js";
+    import { getCookieByName, get_appointment_list } from "../../helper.js";
     import BookingDetailsModal, {
         type BookingDetails,
     } from "./BookingDetailsModal.svelte";
@@ -40,12 +40,7 @@
 
     const dispatch = createEventDispatcher<Events>();
 
-    // ---- Props (configurable) ----
-    // defaults taken from the curl you posted; override in parent for production
-    export let apiUrl =
-        "http://localhost:1880/get_list_of_appointments_admin?limit_start=1&limit_page_length=10";
-
-    export let limitStart = 1;
+    export let limitStart = 0;
     export let pageLength = 10;
 
     // ---- Local UI State ----
@@ -138,29 +133,10 @@
         loading = true;
         error = null;
         try {
-            // build URL with query params (if parent overrides props)
-            const url = new URL(apiUrl);
-            // only set params if they don't already exist
-            if (!url.searchParams.has("limit_start"))
-                url.searchParams.set("limit_start", String(limitStart));
-            if (!url.searchParams.has("limit_page_length"))
-                url.searchParams.set("limit_page_length", String(pageLength));
-
-            const res = await fetch(url.toString(), {
-                headers: {
-                    auth_token: getCookieByName("auth_token") || "",
-                    Accept: "application/json",
-                },
-            });
-
-            if (!res.ok) {
-                throw new Error(`API returned ${res.status} ${res.statusText}`);
-            }
-
-            const body = await res.json();
+            const data = await get_appointment_list(limitStart, pageLength);
 
             // expected structure: { message: { "Shigra Darshan": {...}, "Bhasm Arti": {...}, ... } }
-            const msg = body?.message ?? body;
+            const msg = data?.message ?? data;
             if (!msg || typeof msg !== "object") {
                 throw new Error("Unexpected API response structure.");
             }

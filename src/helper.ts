@@ -79,9 +79,17 @@ export async function verify_token_and_get_token(phone: number, otp: string) {
   }
 }
 
-export async function loadBookings() {
+export async function get_appointment_list(
+  limitStart: number,
+  pageLength: number,
+) {
   try {
-    const res = await fetch("http://localhost:1880/get_appointment_list", {
+    const url = new URL("http://localhost:1880/get_appointment_list");
+
+    url.searchParams.set("limit_start", String(limitStart));
+    url.searchParams.set("limit_page_length", String(pageLength));
+
+    const res = await fetch(url, {
       method: "GET",
       headers: {
         auth_token: getCookieByName("auth_token") || "",
