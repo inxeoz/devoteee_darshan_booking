@@ -125,6 +125,29 @@ export async function create_appointment(body_data: object) {
     });
 
     const data = await res.json();
+
+    return data;
+  } catch (err: any) {
+    console.error(err);
+
+    return null;
+  }
+}
+
+export async function get_appointment(appointmentId: string) {
+  try {
+    const res = await fetch("http://localhost:1880/get_appointment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        auth_token: getCookieByName("auth_token") || "",
+      },
+      body: JSON.stringify({ appointment_id: appointmentId }),
+    });
+
+    const data = await res.json();
+
+    return data;
   } catch (err: any) {
     console.error(err);
 
