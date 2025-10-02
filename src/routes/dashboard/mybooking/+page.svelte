@@ -5,6 +5,15 @@
     import { get_appointment_list } from "../../../helper.js";
     import ShowAppointment from "./ShowAppointment.svelte";
 
+    let show = false;
+    let selectedId = "DA00011";
+
+    function openModal(details) {
+        console.log("value ", details["name"]);
+        selectedId = details["name"];
+        show = true;
+    }
+
     export let limitStart = 0;
     export let pageLength = 10;
 
@@ -14,17 +23,21 @@
         | "Pending"
         | "Pending Verification"
         | "Completed"
-        | "Draft";
+        | "Draft"
+        | "Rejected"
+        | "Cancelled";
+
+    type Companion = { name: string; phone?: number | string; gender?: string };
 
     type Booking = {
         name: string; // display title
         darshan_type: string; // e.g. "Shigra Darshan"
-        darshan_time: string; // e.g. "10:00 AM" (or "10:00")
-        workflow_state: Status;
+        darshan_time: string; // e.g. "10:00:00" (or "10:00 AM")
+        workflow_state: Status | string;
         darshan_date: string; // ISO date string (YYYY-MM-DD or full ISO)
         timeNote?: string; // e.g. "Flexible Time"
-        darshan_companion: { name: string; phone: number; gender: string }[];
-        attender: string;
+        darshan_companion?: Companion[];
+        attender?: string | null;
     };
 
     export let heading = "My Bookings";
@@ -39,14 +52,12 @@
     export let upcoming: Booking[] = [];
     export let past: Booking[] = [];
 
-    // Modal state for <ShowAppointment>
-    let showDetails = false;
     let selected: Booking | null = null;
 
     const dispatch = createEventDispatcher();
 
     // ---- Helpers ----
-    function badgeClass(status: Status) {
+    function badgeClass(status: Status | string) {
         switch (status) {
             case "Approved":
                 return "badge green";
@@ -54,34 +65,63 @@
                 return "badge blue";
             case "Pending Verification":
                 return "badge indigo";
+            case "Rejected":
+                return "badge gray";
+            case "Cancelled":
+                return "badge gray";
             case "Completed":
             case "Draft":
+                return "badge gray";
+            default:
                 return "badge gray";
         }
     }
 
     // Join date + time into a JS Date (best-effort, tolerant of formats)
     function toDate(b: Booking): Date | null {
-        const datePart = b.darshan_date?.trim();
-        const timePart = b.darshan_time?.trim();
+        const datePart = (b?.darshan_date ?? "").toString().trim();
+        const timePart = (b?.darshan_time ?? "").toString().trim();
         if (!datePart && !timePart) return null;
 
-        // Try "YYYY-MM-DDTHH:mm" first if both exist
+        // If both present, try several common concatenations
         if (datePart && timePart) {
-            // Normalize common time formats (e.g., "10:00 AM" -> "10:00 AM")
-            const dt1 = new Date(`${datePart} ${timePart}`);
-            if (!isNaN(+dt1)) return dt1;
-
-            const dt2 = new Date(`${datePart}T${timePart}`);
-            if (!isNaN(+dt2)) return dt2;
+            // Try "YYYY-MM-DD HH:mm:ss" and "YYYY-MM-DDTHH:mm:ss" and "YYYY-MM-DD HH:mm"
+            const tryFormats = [
+                `${datePart} ${timePart}`,
+                `${datePart}T${timePart}`,
+                `${datePart} ${timePart.split(".")[0]}`,
+            ];
+            for (const candidate of tryFormats) {
+                const d = new Date(candidate);
+                if (!isNaN(+d)) return d;
+            }
         }
 
         // Fall back to either piece
-        const d1 = datePart ? new Date(datePart) : null;
-        if (d1 && !isNaN(+d1)) return d1;
-
-        const d2 = timePart ? new Date(timePart) : null;
-        if (d2 && !isNaN(+d2)) return d2;
+        if (datePart) {
+            const d1 = new Date(datePart);
+            if (!isNaN(+d1)) return d1;
+        }
+        if (timePart) {
+            // A bare time will be parsed relative to epoch (bad), so try to attach today's date
+            try {
+                const today = new Date();
+                const [h, m, s] = timePart
+                    .split(":")
+                    .map((x) => parseInt(x, 10) || 0);
+                const d2 = new Date(
+                    today.getFullYear(),
+                    today.getMonth(),
+                    today.getDate(),
+                    h,
+                    m,
+                    s ?? 0,
+                );
+                if (!isNaN(+d2)) return d2;
+            } catch {
+                // ignore
+            }
+        }
 
         return null;
     }
@@ -91,8 +131,9 @@
         const up: Booking[] = [];
         const pa: Booking[] = [];
         for (const b of all) {
-            const t = toDate(b)?.getTime();
-            if (typeof t === "number" && !isNaN(t) && t >= now) up.push(b);
+            const dt = toDate(b);
+            const t = dt ? dt.getTime() : NaN;
+            if (!isNaN(t) && t >= now) up.push(b);
             else pa.push(b);
         }
         // sort upcoming ascending by datetime, past descending
@@ -109,7 +150,6 @@
         const d = toDate(b);
         if (!d) return b.timeNote ? b.timeNote : "—";
         try {
-            // Adjust locale/format as needed:
             const date = new Intl.DateTimeFormat(undefined, {
                 weekday: "short",
                 year: "numeric",
@@ -126,31 +166,70 @@
         }
     }
 
-    function openDetails(b: Booking) {
-        selected = b;
-        showDetails = true;
-        // If you prefer navigation instead of a modal, replace with:
-        // goto(`/bookings/${encodeURIComponent(b.name)}`);
-    }
-
+    /**
+     * FetchBookings
+     * - Accepts different shapes:
+     *   1) An array of bookings
+     *   2) An object with `.message` that contains per-darshan-type entries, each with "Appointment List" array
+     */
     async function FetchBookings() {
         loading = true;
         error = null;
         try {
             const data = await get_appointment_list(limitStart, pageLength);
 
-            // The helper may return either an array directly or { message: [...] }
-            const bookings: Booking[] = Array.isArray(data)
-                ? data
-                : Array.isArray((data as any)?.message)
-                  ? (data as any).message
-                  : [];
+            // If API returned the curl sample you provided, data.message is an object with keys like "Vip Darshan"
+            let bookings: Booking[] = [];
+
+            if (Array.isArray(data)) {
+                bookings = data as Booking[];
+            } else if (data && Array.isArray((data as any)?.message)) {
+                // Some APIs wrap message as array directly
+                bookings = (data as any).message as Booking[];
+            } else if (data && typeof (data as any).message === "object") {
+                // Your curl response: message: { "Vip Darshan": { "Appointment List": [...] }, ... }
+                const msg = (data as any).message;
+                for (const key of Object.keys(msg)) {
+                    const entry = msg[key];
+                    // prefer "Appointment List" property, but also handle other shapes
+                    const arr = Array.isArray(entry?.["Appointment List"])
+                        ? entry["Appointment List"]
+                        : Array.isArray(entry?.appointments)
+                          ? entry.appointments
+                          : Array.isArray(entry)
+                            ? entry
+                            : [];
+                    // Ensure darshan_type present (use the key if absent)
+                    for (const it of arr) {
+                        const booking: Booking = {
+                            name: it.name ?? it.id ?? "Unknown",
+                            darshan_type: it.darshan_type ?? key,
+                            darshan_time: it.darshan_time ?? it.time ?? "",
+                            workflow_state:
+                                it.workflow_state ?? it.status ?? "Pending",
+                            darshan_date: it.darshan_date ?? it.date ?? "",
+                            timeNote: it.timeNote ?? undefined,
+                            darshan_companion:
+                                it.darshan_companion ?? it.companions ?? [],
+                            attender: it.attender ?? null,
+                        };
+                        bookings.push(booking);
+                    }
+                }
+            } else if (Array.isArray((data as any)?.data)) {
+                bookings = (data as any).data as Booking[];
+            } else {
+                // unknown shape - try to coerce to array if possible
+                bookings = Array.isArray(data as any) ? (data as any) : [];
+            }
 
             const { up, pa } = splitBookings(bookings);
             upcoming = up;
             past = pa;
         } catch (e: any) {
-            error = e?.message ?? "Unknown error";
+            error = e?.message ?? String(e) ?? "Unknown error";
+            upcoming = [];
+            past = [];
         } finally {
             loading = false;
         }
@@ -183,7 +262,11 @@
                     aria-label="Refresh bookings"
                     disabled={loading}
                 >
-                    {#if loading}Refreshing...{:else}Refresh{/if}
+                    {#if loading}
+                        Refreshing...
+                    {:else}
+                        Refresh
+                    {/if}
                 </button>
             </div>
         </div>
@@ -203,7 +286,7 @@
                     <button
                         class="item"
                         type="button"
-                        on:click={() => openDetails(b)}
+                        on:click={() => openModal(b)}
                         aria-label={`Open booking ${b.name}`}
                     >
                         <div class="left">
@@ -233,7 +316,7 @@
                     <button
                         class="item"
                         type="button"
-                        on:click={() => openDetails(b)}
+                        on:click={() => openModal(b)}
                         aria-label={`Open booking ${b.name}`}
                     >
                         <div class="left">
@@ -256,16 +339,15 @@
     </div>
 </div>
 
-{#if showDetails && selected}
-    <!-- Expect ShowAppointment to accept `booking` and dispatch `close` -->
+{#if show && selectedId}
     <ShowAppointment
-        {selected}
-        booking={selected}
-        on:close={() => (showDetails = false)}
+        appointmentId={selectedId}
+        on:close={() => (show = false)}
     />
 {/if}
 
 <style>
+    /* (unchanged - keep your existing styles) */
     :global(html, body) {
         height: 100%;
     }
