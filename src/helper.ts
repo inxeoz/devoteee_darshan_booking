@@ -10,13 +10,17 @@ export function getCookieByName(name: string): string | null {
   return null;
 }
 
-export async function getProfileDetails() {
+export async function get_profile(login_as: string) {
   try {
-    const res = await fetch("http://localhost:1880/get_profile_details", {
-      method: "GET",
+    const res = await fetch("http://localhost:1880/get_profile", {
+      method: "POST",
       headers: {
-        auth_token: getCookieByName("auth_token") || "",
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        token: getCookieByName("auth_token"),
+        login_as: login_as,
+      }),
     });
 
     if (!res.ok) throw new Error("Network response was not ok");
@@ -30,7 +34,7 @@ export async function getProfileDetails() {
   }
 }
 
-export async function request_otp(phone: number) {
+export async function request_otp(phone: number, login_as: string) {
   try {
     const res = await fetch("http://localhost:1880/request_otp", {
       method: "POST",
@@ -39,6 +43,7 @@ export async function request_otp(phone: number) {
       },
       body: JSON.stringify({
         phone: phone,
+        login_as: login_as,
       }),
     });
 
@@ -52,9 +57,13 @@ export async function request_otp(phone: number) {
   }
 }
 
-export async function verify_token_and_get_token(phone: number, otp: string) {
+export async function verify_token_and_get_token(
+  phone: number,
+  otp: string,
+  login_as: string,
+) {
   try {
-    const res = await fetch("http://localhost:1880/verify_otp", {
+    const res = await fetch("http://localhost:1880/verify_otp_and_get_token", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -62,6 +71,7 @@ export async function verify_token_and_get_token(phone: number, otp: string) {
       body: JSON.stringify({
         phone: phone,
         otp: otp,
+        login_as: login_as,
       }),
     });
 
@@ -69,6 +79,8 @@ export async function verify_token_and_get_token(phone: number, otp: string) {
 
     if (data.message) {
       document.cookie = `auth_token=${data.message}; path=/;`;
+
+      console.log("token", data.message);
     }
 
     return data;
@@ -82,6 +94,7 @@ export async function verify_token_and_get_token(phone: number, otp: string) {
 export async function get_appointment_list(
   limitStart: number,
   pageLength: number,
+  login_as: string,
 ) {
   try {
     const url = new URL("http://localhost:1880/get_appointment_list");
@@ -90,11 +103,14 @@ export async function get_appointment_list(
     url.searchParams.set("limit_page_length", String(pageLength));
 
     const res = await fetch(url, {
-      method: "GET",
+      method: "POST",
       headers: {
-        auth_token: getCookieByName("auth_token") || "",
-        Accept: "application/json",
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        token: getCookieByName("auth_token"),
+        login_as: login_as,
+      }),
     });
 
     if (!res.ok) {
@@ -134,18 +150,23 @@ export async function create_appointment(body_data: object) {
   }
 }
 
-export async function get_appointment(appointmentId: string) {
+export async function get_appointment(appointmentId: string, login_as: string) {
   try {
     const res = await fetch("http://localhost:1880/get_appointment", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        auth_token: getCookieByName("auth_token") || "",
       },
-      body: JSON.stringify({ appointment_id: appointmentId }),
+      body: JSON.stringify({
+        token: getCookieByName("auth_token"),
+        login_as: login_as,
+        appointment_id: appointmentId,
+      }),
     });
 
     const data = await res.json();
+
+    console.log("booking ++++ ", data);
 
     return data;
   } catch (err: any) {

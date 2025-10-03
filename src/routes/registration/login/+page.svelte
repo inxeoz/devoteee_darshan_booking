@@ -7,14 +7,15 @@
 
     let phone = 0;
     let otp = "";
+    let login_as = "Devoteee";
 
     async function sendOtp() {
         // alert(`OTP sent to ${phone} (simulation)`);
-        await request_otp(phone);
+        await request_otp(phone, login_as);
     }
 
     async function login() {
-        const data = await verify_token_and_get_token(phone, otp);
+        const data = await verify_token_and_get_token(phone, otp, login_as);
 
         if (data !== null) {
             goto("/dashboard");
@@ -33,6 +34,14 @@
                 bind:value={phone}
                 placeholder="Enter phone number"
             />
+        </div>
+
+        <div class="form-row">
+            <label>Login as</label>
+            <select bind:value={login_as}>
+                <option value="Admin">Admin</option>
+                <option value="Devoteee">Devoteee</option>
+            </select>
         </div>
 
         <div class="form-row">

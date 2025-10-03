@@ -1,42 +1,19 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
-    import { getCookieByName, get_appointment_list } from "../../helper.js";
-    import BookingDetailsModal, {
-        type BookingDetails,
-    } from "./BookingDetailsModal.svelte";
+    import { get_appointment_list } from "../../helper.js";
 
-    // ---- Types ----
-    export type DarshanKind =
-        | "VIP Darshan"
-        | "Bhasm Arti"
-        | "Shigra Darshan"
-        | "Localide Darshan";
+    import ShowAppointment from "@src/routes/darshan_management/ShowAppointment.svelte";
 
-    export type Summary = {
-        kind: DarshanKind;
-        received: number;
-        approved: number;
-        rejected: number;
-        accent?: "blue" | "red" | "indigo" | "teal"; // controls top-border color
-    };
-
-    export type PendingRow = {
-        id: string;
-        kind: DarshanKind;
-        devotee: string | null;
-        dateISO: string; // yyyy-mm-dd (darshan_date)
-        time?: string; // darshan_time from API
-        workflow_state?: string;
-        raw?: any; // raw API object for details if needed
-    };
-
-    type Events = {
-        approve: { id: string };
-        reject: { id: string };
-        view: { id: string };
-        approveBulk: { ids: string[] };
-        rejectBulk: { ids: string[] };
-    };
+    import {
+        type Status,
+        type Companion,
+        type Booking,
+        type DarshanKind,
+        type Summary,
+        type PendingRow,
+        type Events,
+        frappeDateToISO,
+    } from "@src/appointment.js";
 
     const dispatch = createEventDispatcher<Events>();
 
@@ -87,13 +64,12 @@
 
     // UI: selection & filters
     let selected: Set<string> = new Set();
-    let selectAllChecked = false;
     let search = "";
     let kindFilter: "" | DarshanKind = "";
 
-    // Modal state
+    // Modal state — show overlay by id only
     let showDetails = false;
-    let details: BookingDetails | null = null;
+    let selectedId: string = "";
 
     const fmtDate = new Intl.DateTimeFormat("en-CA", {
         year: "numeric",
@@ -101,15 +77,12 @@
         day: "2-digit",
     }); // yyyy-mm-dd
 
-    // ---- Utilities ----
     function normalizeKind(apiKind: string): DarshanKind {
-        // API returns e.g. "Vip Darshan" — normalize to our DarshanKind values
         const k = (apiKind || "").trim().toLowerCase();
         if (k.includes("vip")) return "VIP Darshan";
         if (k.includes("bhasm")) return "Bhasm Arti";
         if (k.includes("shigra")) return "Shigra Darshan";
         if (k.includes("localide")) return "Localide Darshan";
-        // fallback: prefer VIP Darshan as default to keep typing
         return "VIP Darshan";
     }
 
@@ -133,19 +106,21 @@
         loading = true;
         error = null;
         try {
-            const data = await get_appointment_list(limitStart, pageLength);
+            const data = await get_appointment_list(
+                limitStart,
+                pageLength,
+                "Admin",
+            );
 
-            // expected structure: { message: { "Shigra Darshan": {...}, "Bhasm Arti": {...}, ... } }
+            console.log("bookings ", data.message);
             const msg = data?.message ?? data;
             if (!msg || typeof msg !== "object") {
                 throw new Error("Unexpected API response structure.");
             }
 
-            // reset maps
             appointmentsMap = {};
             pending = [];
 
-            // Build summaries and pending list from API
             const kinds: DarshanKind[] = [
                 "VIP Darshan",
                 "Bhasm Arti",
@@ -154,7 +129,6 @@
             ];
             const newSummaries: Summary[] = [];
 
-            // The API keys may be "Vip Darshan", "Bhasm Arti", etc.
             for (const key of Object.keys(msg)) {
                 const entry = msg[key];
                 const kind = normalizeKind(key);
@@ -188,13 +162,15 @@
                         appt?.darshan_type ?? key,
                     );
 
+                    const iso =
+                        frappeDateToISO(darshan_date) ??
+                        new Date().toISOString();
+
                     const row: PendingRow = {
                         id,
                         kind: normalizedKind,
                         devotee,
-                        dateISO:
-                            darshan_date ??
-                            new Date().toISOString().slice(0, 10),
+                        dateISO: iso,
                         time: darshan_time ?? undefined,
                         workflow_state,
                         raw: appt,
@@ -205,7 +181,7 @@
                 }
             }
 
-            // Ensure every known kind exists in summaries (so UI grid remains stable)
+            // ensure every known kind exists
             for (const k of kinds) {
                 if (!newSummaries.find((s) => s.kind === k)) {
                     newSummaries.push({
@@ -218,7 +194,6 @@
                 }
             }
 
-            // Sort summaries to align with your desired order
             const order = {
                 "VIP Darshan": 0,
                 "Bhasm Arti": 1,
@@ -240,7 +215,6 @@
     }
 
     onMount(() => {
-        // fetch immediately on mount
         fetchAppointments();
     });
 
@@ -279,47 +253,22 @@
     function reject(id: string) {
         dispatch("reject", { id });
     }
-
-    // Build data for the modal (from the raw API row if present)
-    function buildBookingDetails(row: PendingRow): BookingDetails {
-        const raw = row.raw ?? appointmentsMap[row.id] ?? {};
-        return {
-            id: row.id,
-            type: `${row.kind} Booking`,
-            visitDateISO: row.dateISO,
-            protocol: raw?.protocol ?? raw?.darshan_type ?? undefined,
-            primary: {
-                name: row.devotee ?? raw?.attender ?? "Unknown",
-                age: raw?.age ?? (row.kind === "VIP Darshan" ? 45 : 40),
-                gender: raw?.gender ?? "Male",
-                docs: raw?.docs ?? [
-                    {
-                        label: "ID",
-                        maskedId: (raw?.name ?? row.id).slice(0, 4) + "xxxx",
-                    },
-                ],
-                badge: "Primary Devotee",
-            },
-            companions: raw?.companions ?? [],
-            supportingDocumentUrl:
-                raw?.supportingDocumentUrl ??
-                raw?.document_url ??
-                "/api/document/sample.pdf",
-            supportingDocumentLabel: "View Document",
-        };
-    }
-
+    // open overlay using only the booking id (PendingRow.id)
     function openDetails(id: string) {
         const row = pending.find((p) => p.id === id);
-        if (!row) return;
-        details = buildBookingDetails(row);
+        if (!row) return; // nothing to show
+
+        // Always use the canonical booking id stored in the row
+        //
+        console.log("row ", row);
+        selectedId = row.id;
+        console.log("selectedId ", selectedId);
+
         showDetails = true;
     }
 
     function view(id: string) {
-        // Keep the original event for parent listeners…
         dispatch("view", { id });
-        // …and open the modal locally
         openDetails(id);
     }
 
@@ -434,7 +383,7 @@
                     <th style="width:36px">
                         <input
                             type="checkbox"
-                            bind:checked={selectAllChecked}
+                            checked={selectAllChecked}
                             on:change={(e) =>
                                 toggleAll(
                                     (e.target as HTMLInputElement).checked,
@@ -506,21 +455,13 @@
         </table>
     </section>
 
-    <!-- Booking Details Modal -->
-    {#if details}
-        <BookingDetailsModal
-            bind:open={showDetails}
-            booking={details}
-            on:close={() => (showDetails = false)}
-            on:approve={(e) => {
-                dispatch("approve", { id: e.detail.id });
+    {#if showDetails}
+        <ShowAppointment
+            appointmentId={selectedId}
+            on:close={() => {
                 showDetails = false;
+                selectedId = "";
             }}
-            on:reject={(e) => {
-                dispatch("reject", { id: e.detail.id });
-                showDetails = false;
-            }}
-            on:viewDocument={(e) => window.open(e.detail.url, "_blank")}
         />
     {/if}
 </div>

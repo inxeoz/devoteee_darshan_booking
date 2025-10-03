@@ -49,8 +49,7 @@
         data = null;
 
         try {
-            console.log("appointmentId", appointmentId);
-            const payload = await get_appointment(appointmentId);
+            const payload = await get_appointment(appointmentId, "Admin");
 
             if (payload && payload.message) {
                 data = payload.message;

@@ -4,6 +4,11 @@
     import { createEventDispatcher } from "svelte";
     import { get_appointment_list } from "../../../helper.js";
     import ShowAppointment from "./ShowAppointment.svelte";
+    import {
+        type Status,
+        type Companion,
+        type Booking,
+    } from "@src/appointment.js";
 
     let show = false;
     let selectedId = "DA00011";
@@ -16,29 +21,6 @@
 
     export let limitStart = 0;
     export let pageLength = 10;
-
-    // ---- Types ----
-    type Status =
-        | "Approved"
-        | "Pending"
-        | "Pending Verification"
-        | "Completed"
-        | "Draft"
-        | "Rejected"
-        | "Cancelled";
-
-    type Companion = { name: string; phone?: number | string; gender?: string };
-
-    type Booking = {
-        name: string; // display title
-        darshan_type: string; // e.g. "Shigra Darshan"
-        darshan_time: string; // e.g. "10:00:00" (or "10:00 AM")
-        workflow_state: Status | string;
-        darshan_date: string; // ISO date string (YYYY-MM-DD or full ISO)
-        timeNote?: string; // e.g. "Flexible Time"
-        darshan_companion?: Companion[];
-        attender?: string | null;
-    };
 
     export let heading = "My Bookings";
     export let subtitle = "View your upcoming and past darshan bookings.";

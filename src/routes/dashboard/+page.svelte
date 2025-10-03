@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { getCookieByName, getProfileDetails } from "../../helper.js";
+    import { getCookieByName, get_profile } from "../../helper.js";
     import { goto } from "$app/navigation";
 
     const dispatch = createEventDispatcher();
@@ -51,7 +51,7 @@
     }
 
     onMount(async () => {
-        const data = await getProfileDetails();
+        const data = await get_profile("Devoteee");
         if (data !== null) {
             devoteee_details = data.message;
             devoteee_name = data.message.devoteee_name || "";
