@@ -1,11 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { create_appointment } from "../../../helper.js";
-
-    import {
-        type Companion,
-        type Vip_Appointment_Payload,
-    } from "@src/appointment.js";
+    import { create_appointment } from "@src/helper.js";
 
     // Props
     export let title = "Book VIP Darshan (Protocol)";
@@ -90,13 +85,10 @@
                 companion_phone: c.phone || "",
                 companion_age: c.age ?? "",
             })),
+            save_as_draft: saveAsDraft,
         };
         try {
-            const res = await create_appointment(
-                details,
-                saveAsDraft,
-                "Devoteee",
-            );
+            const res = await create_appointment(details, "Devoteee");
             bookingId = res?.id ?? null;
             bookingSuccess = true;
         } catch (err) {

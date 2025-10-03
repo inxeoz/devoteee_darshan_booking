@@ -1,6 +1,6 @@
 <script>
     import { goto } from "$app/navigation";
-    import { getCookieByName } from "../../../helper.js";
+    import { getCookieByName, update_profile } from "@src/helper.js";
 
     // progress shown in the thin bar under the header
     export let progress = 80; // percent
@@ -44,45 +44,20 @@
         serverCode = "";
 
         // prepare payload (fixed aadhar)
-        const payload = {
-            info: {
-                devoteee_name: name.trim(),
-                gender,
-                dob,
-                address: address.trim(),
-                aadhar: aadhar.trim(),
-            },
+        const info = {
+            devoteee_name: name.trim(),
+            gender,
+            dob,
+            address: address.trim(),
+            aadhar: aadhar.trim(),
         };
 
-        try {
-            const res = await fetch(apiUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    auth_token: getCookieByName("auth_token") || "",
-                },
-                body: JSON.stringify(payload),
-            });
+        const json = await update_profile(info, "Devoteee");
 
-            const json = await res.json().catch(() => ({}));
-
-            if (!res.ok) {
-                serverError = json?.message || `Server returned ${res.status}`;
-                return;
-            }
-
-            // success
-            serverMessage = json?.message || "Profile saved.";
-            serverCode = (json && (json.code || json.status)) || "";
-            submitted = true;
-
-            // optionally navigate after success, or keep user on page
-            // goto('/dashboard'); // uncomment if auto-redirect desired
-        } catch (err) {
-            serverError = err?.message || String(err);
-        } finally {
-            loading = false;
-        }
+        // success
+        serverMessage = json?.message || "Profile saved.";
+        serverCode = (json && (json.code || json.status)) || "";
+        submitted = true;
     }
 
     function goBack() {

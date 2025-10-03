@@ -128,23 +128,18 @@ export async function get_appointment_list(
   }
 }
 
-export async function create_appointment(
-  details: {},
-  save_as_draft: boolean,
-  login_as: string,
-) {
+export async function create_appointment(details: {}, login_as: string) {
   try {
     // NOTE: curl used GET with body — that's unusual. We use POST here (recommended).
     const res = await fetch("http://localhost:1880/create_appointment", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        auth_token: getCookieByName("auth_token") || "",
       },
       body: JSON.stringify({
         details: details,
-        save_as_draft: save_as_draft,
         login_as: login_as,
+        token: getCookieByName("auth_token") || "",
       }),
     });
 
@@ -176,6 +171,29 @@ export async function get_appointment(appointmentId: string, login_as: string) {
 
     console.log("booking ++++ ", data);
 
+    return data;
+  } catch (err: any) {
+    console.error(err);
+
+    return null;
+  }
+}
+
+export async function update_profile(info: {}, login_as: string) {
+  try {
+    const res = await fetch("http://localhost:1880/update_profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        info: info,
+        token: getCookieByName("auth_token") || "",
+        login_as: login_as,
+      }),
+    });
+
+    const data = await res.json();
     return data;
   } catch (err: any) {
     console.error(err);
