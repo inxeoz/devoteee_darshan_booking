@@ -2,6 +2,11 @@
     import { goto } from "$app/navigation";
     import { create_appointment } from "../../../helper.js";
 
+    import {
+        type Companion,
+        type Vip_Appointment_Payload,
+    } from "@src/appointment.js";
+
     // Props
     export let title = "Book VIP Darshan (Protocol)";
     export let subtitle = "Select your protocol category to proceed.";
@@ -70,27 +75,28 @@
 
     async function submitBooking() {
         loading = true;
-        const payload = {
-            details: {
-                darshan_date: visitDate,
-                darshan_time: selectedSlot ? slotTimeTo24hr(selectedSlot) : "",
-                darshan_with_protocol: 1,
-                protocol_rank: selectedProtocolValue || "",
-                government_authority_letter: authorityLetterFile
-                    ? authorityLetterFile.name
-                    : "",
-                darshan_type: "Vip Darshan",
-                darshan_companion: companions.map((c) => ({
-                    companion_name: c.name || "",
-                    companion_phone: c.phone || "",
-                    companion_age: c.age ?? "",
-                })),
-            },
-            save_as_draft: !!saveAsDraft,
-        };
 
+        const details = {
+            darshan_date: visitDate,
+            darshan_time: selectedSlot ? slotTimeTo24hr(selectedSlot) : "",
+            darshan_with_protocol: 1,
+            protocol_rank: selectedProtocolValue || "",
+            government_authority_letter: authorityLetterFile
+                ? authorityLetterFile.name
+                : "",
+            darshan_type: "Vip Darshan",
+            darshan_companion: companions.map((c) => ({
+                companion_name: c.name || "",
+                companion_phone: c.phone || "",
+                companion_age: c.age ?? "",
+            })),
+        };
         try {
-            const res = await create_appointment(payload);
+            const res = await create_appointment(
+                details,
+                saveAsDraft,
+                "Devoteee",
+            );
             bookingId = res?.id ?? null;
             bookingSuccess = true;
         } catch (err) {

@@ -189,6 +189,12 @@
                                             {c.companion_phone ??
                                                 c.companion_phone ??
                                                 "—"}
+
+                                            <div class="comp-age">
+                                                {c.companion_age ??
+                                                    c.companion_age ??
+                                                    "Unknown"}
+                                            </div>
                                         </div>
                                     </li>
                                 {/each}

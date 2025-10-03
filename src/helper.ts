@@ -128,7 +128,11 @@ export async function get_appointment_list(
   }
 }
 
-export async function create_appointment(body_data: object) {
+export async function create_appointment(
+  details: {},
+  save_as_draft: boolean,
+  login_as: string,
+) {
   try {
     // NOTE: curl used GET with body — that's unusual. We use POST here (recommended).
     const res = await fetch("http://localhost:1880/create_appointment", {
@@ -137,7 +141,11 @@ export async function create_appointment(body_data: object) {
         "Content-Type": "application/json",
         auth_token: getCookieByName("auth_token") || "",
       },
-      body: JSON.stringify(body_data),
+      body: JSON.stringify({
+        details: details,
+        save_as_draft: save_as_draft,
+        login_as: login_as,
+      }),
     });
 
     const data = await res.json();
