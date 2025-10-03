@@ -158,7 +158,11 @@
         loading = true;
         error = null;
         try {
-            const data = await get_appointment_list(limitStart, pageLength);
+            const data = await get_appointment_list(
+                limitStart,
+                pageLength,
+                "Devoteee",
+            );
 
             // If API returned the curl sample you provided, data.message is an object with keys like "Vip Darshan"
             let bookings: Booking[] = [];
