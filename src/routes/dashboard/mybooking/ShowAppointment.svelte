@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount, createEventDispatcher, onDestroy } from "svelte";
-    import { get_appointment } from "@src/helper.js";
+    import { get_appointment } from "@src/helper_devoteee.js";
+
     // Props
     export let appointmentId: string; // required
     const dispatch = createEventDispatcher();

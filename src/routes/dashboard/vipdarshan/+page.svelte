@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { create_appointment } from "@src/helper.js";
+    import { create_appointment } from "@src/helper_devoteee.js";
 
     // Props
     export let title = "Book VIP Darshan (Protocol)";

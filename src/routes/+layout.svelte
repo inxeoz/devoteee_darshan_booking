@@ -4,6 +4,9 @@
 
 <nav class="bg-blue-500 flex gap-x-10 pl-3.5">
     <a href="/">Home</a>
+    <a href="/registration/login_request_devoteee">login request devotee</a>
+    <a href="/registration/login_devoteee">login devotee</a>
+
     <a href="/registration">registration</a>
     <a href="/registration/ekyc">ekyc</a>
     <a href="/registration/complete_profile">complete profile </a>
@@ -17,6 +20,7 @@
     <a href="/attender">attender </a>
 
     <a href="/registration/login">login</a>
+    <a href="/demo">demo</a>
 </nav>
 
 <slot />

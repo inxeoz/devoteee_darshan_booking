@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
-    import { get_appointment_list } from "../../../helper.js";
+    import { get_appointment_list } from "@src/helper_devoteee.js";
     import ShowAppointment from "./ShowAppointment.svelte";
     import {
         type Status,
@@ -158,11 +158,7 @@
         loading = true;
         error = null;
         try {
-            const data = await get_appointment_list(
-                limitStart,
-                pageLength,
-                "Devoteee",
-            );
+            const data = await get_appointment_list(limitStart, pageLength);
 
             // If API returned the curl sample you provided, data.message is an object with keys like "Vip Darshan"
             let bookings: Booking[] = [];
