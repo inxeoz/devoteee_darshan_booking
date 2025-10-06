@@ -80,7 +80,7 @@ export async function create_appointment(info: {}) {
   }
 }
 
-export async function get_appointment(appointmentId: string) {
+export async function get_appointment(appointment_id: string) {
   try {
     const res = await fetch(
       "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.get_appointment",
@@ -90,7 +90,7 @@ export async function get_appointment(appointmentId: string) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          appointmentId: appointmentId,
+          appointment_id: appointment_id,
         }),
       },
     );
@@ -169,6 +169,31 @@ export async function login_devoteee(phone: number, pwd: string) {
         pwd: pwd,
       }),
     });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    console.error(err);
+
+    return null;
+  }
+}
+
+export async function registration_devoteee(phone: number) {
+  try {
+    const res = await fetch(
+      "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.create_devoteee_user",
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: phone,
+        }),
+      },
+    );
 
     const data = await res.json();
     return data;

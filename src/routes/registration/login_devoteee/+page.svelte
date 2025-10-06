@@ -33,7 +33,7 @@
 
 <div class="page">
     <div class="card">
-        <h2>Login Request (Phone)</h2>
+        <h2>Login (Phone and temp pwd )</h2>
 
         <div class="form-row">
             <label>Phone number</label>

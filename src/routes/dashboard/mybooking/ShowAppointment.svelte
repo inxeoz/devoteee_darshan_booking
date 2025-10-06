@@ -55,6 +55,8 @@
 
             if (payload && payload.message) {
                 data = payload.message;
+
+                console.log(payload);
             } else {
                 data = payload;
             }
