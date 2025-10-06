@@ -3,8 +3,15 @@
     import { onMount } from "svelte";
     import { login_request_admin } from "@src/helper_admin.js";
     import { login_request_devoteee } from "@src/helper_devoteee.js";
+    import { login_request_attender } from "@src/helper_attender.js";
 
     import { json } from "@sveltejs/kit";
+
+    interface LoginResponse {
+        message?: string;
+    }
+
+    let json_data: LoginResponse;
 
     let user_type = "";
     let phone = 0;
@@ -22,14 +29,16 @@
         localStorage.setItem("Mphone", phone);
         localStorage.setItem("Muser_type", user_type);
 
-        let json_data: Object;
-
         if (user_type === "Admin") {
             json_data = await login_request_admin(phone);
         }
 
         if (user_type === "Devoteee") {
             json_data = await login_request_devoteee(phone);
+        }
+
+        if (user_type === "Attender") {
+            json_data = await login_request_attender(phone);
         }
 
         if (json_data.message) {
@@ -66,6 +75,7 @@
             <select bind:value={user_type}>
                 <option value="Admin">Admin</option>
                 <option value="Devoteee">Devoteee</option>
+                <option value="Attender">Attender</option>
             </select>
         </div>
 
