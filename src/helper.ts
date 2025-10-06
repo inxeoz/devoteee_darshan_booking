@@ -19,7 +19,7 @@ export async function login_verify(phone: number, pwd: string) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        usr: phone,
+        usr: phone + "",
         pwd: pwd,
       }),
     });
