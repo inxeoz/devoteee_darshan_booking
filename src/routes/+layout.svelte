@@ -26,8 +26,7 @@
 <nav class="bg-blue-500 flex gap-x-10 pl-3.5">
     <a href="/">Home</a>
     <a href="/registration/devoteee_registration">Registration</a>
-    <a href="/registration/login_request_devoteee">login devotee</a>
-    <a href="/registration/login_devoteee">Verify Login</a>
+    <a href="/login">login</a>
 
     <a href="/dashboard">dashboard </a>
 
