@@ -88,7 +88,7 @@
             save_as_draft: saveAsDraft,
         };
         try {
-            const res = await create_appointment(details, "Devoteee");
+            const res = await create_appointment(details);
             bookingId = res?.id ?? null;
             bookingSuccess = true;
         } catch (err) {
