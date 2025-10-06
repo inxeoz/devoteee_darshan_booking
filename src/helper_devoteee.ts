@@ -1,8 +1,9 @@
+const COMMON =
+  "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.";
+
 export async function get_profile() {
   try {
-    const url =
-      "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.get_profile";
-    const res = await fetch(url, {
+    const res = await fetch(COMMON + "get_profile", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -24,20 +25,17 @@ export async function get_appointment_list(
   pageLength: number,
 ) {
   try {
-    const res = await fetch(
-      "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.get_appointment_list",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        // body: JSON.stringify({
-        //   token: getCookieByName("auth_token"),
-        //   login_as: login_as,
-        // }),
+    const res = await fetch(COMMON + "get_appointment_list", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      credentials: "include",
+      // body: JSON.stringify({
+      //   token: getCookieByName("auth_token"),
+      //   login_as: login_as,
+      // }),
+    });
 
     if (!res.ok) {
       const txt = await res.text();
@@ -57,18 +55,15 @@ export async function get_appointment_list(
 export async function create_appointment(info: {}) {
   try {
     // NOTE: curl used GET with body — that's unusual. We use POST here (recommended).
-    const res = await fetch(
-      "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.create_appointment",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          info: info,
-        }),
+    const res = await fetch(COMMON + "create_appointment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        info: info,
+      }),
+    });
 
     const data = await res.json();
 
@@ -82,18 +77,15 @@ export async function create_appointment(info: {}) {
 
 export async function get_appointment(appointment_id: string) {
   try {
-    const res = await fetch(
-      "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.get_appointment",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          appointment_id: appointment_id,
-        }),
+    const res = await fetch(COMMON + "get_appointment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        appointment_id: appointment_id,
+      }),
+    });
 
     const data = await res.json();
 
@@ -109,18 +101,15 @@ export async function get_appointment(appointment_id: string) {
 
 export async function update_profile(info: {}, login_as: string) {
   try {
-    const res = await fetch(
-      "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.update_profile",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          info: info,
-        }),
+    const res = await fetch(COMMON + "update_profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        info: info,
+      }),
+    });
 
     const data = await res.json();
     return data;
@@ -133,19 +122,16 @@ export async function update_profile(info: {}, login_as: string) {
 
 export async function login_request_devoteee(phone: number) {
   try {
-    const res = await fetch(
-      "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.login_request",
-      {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: phone,
-        }),
+    const res = await fetch(COMMON + "login_request", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        phone: phone,
+      }),
+    });
 
     const data = await res.json();
     return data;
@@ -181,19 +167,16 @@ export async function login_devoteee(phone: number, pwd: string) {
 
 export async function registration_devoteee(phone: number) {
   try {
-    const res = await fetch(
-      "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.create_devoteee_user",
-      {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: phone,
-        }),
+    const res = await fetch(COMMON + "create_devoteee_user", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        phone: phone,
+      }),
+    });
 
     const data = await res.json();
     return data;
