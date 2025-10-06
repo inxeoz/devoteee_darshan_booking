@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
-    import { get_appointment_list } from "../../helper.js";
+    import { get_appointment_list } from "@src/helper_admin.js";
 
     import ShowAppointment from "@src/routes/darshan_management/ShowAppointment.svelte";
 
@@ -106,11 +106,7 @@
         loading = true;
         error = null;
         try {
-            const data = await get_appointment_list(
-                limitStart,
-                pageLength,
-                "Admin",
-            );
+            const data = await get_appointment_list(limitStart, pageLength);
 
             console.log("bookings ", data.message);
             const msg = data?.message ?? data;

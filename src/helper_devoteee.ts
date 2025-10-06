@@ -151,7 +151,7 @@ export async function login_devoteee(phone: number, pwd: string) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        usr: phone,
+        usr: phone + "",
         pwd: pwd,
       }),
     });

@@ -27,6 +27,7 @@
     <a href="/">Home</a>
     <a href="/registration/devoteee_registration">Registration</a>
     <a href="/registration/login_request_devoteee">login devotee</a>
+    <a href="/registration/login_devoteee">Verify Login</a>
 
     <a href="/dashboard">dashboard </a>
 

@@ -3,6 +3,7 @@
     import { onMount } from "svelte";
 
     import { login_request_devoteee } from "@src/helper_devoteee.js";
+    import { json } from "@sveltejs/kit";
 
     // phone as string to allow leading + / 0 etc; we'll validate before sending
     let phone = 0;
@@ -18,6 +19,12 @@
         loading = true;
 
         const json_data = await login_request_devoteee(phone);
+
+        if (json_data.message) {
+            localStorage.setItem("Mphone", phone);
+
+            goto("/registration/login_devoteee");
+        }
         message = JSON.stringify(json_data);
     }
 

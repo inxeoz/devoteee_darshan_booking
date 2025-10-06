@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, createEventDispatcher, onDestroy } from "svelte";
-    import { get_appointment } from "@src/helper.js";
+    import { get_appointment } from "@src/helper_admin.js";
     // Props
     export let appointmentId: string; // required
     const dispatch = createEventDispatcher();
@@ -49,7 +49,7 @@
         data = null;
 
         try {
-            const payload = await get_appointment(appointmentId, "Admin");
+            const payload = await get_appointment(appointmentId);
 
             if (payload && payload.message) {
                 data = payload.message;

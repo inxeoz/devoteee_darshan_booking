@@ -2,10 +2,14 @@
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
 
-    import { login_devoteee } from "@src/helper_devoteee.js";
+    import { page } from "$app/stores";
+    $: queryParam = $page.url.searchParams.get("param");
 
-    // phone as string to allow leading + / 0 etc; we'll validate before sending
-    let phone = 0;
+    import { login_devoteee } from "@src/helper_devoteee.js";
+    import { parse } from "postcss";
+
+    export let phone = 0;
+
     let temp_pwd = "";
     let loading = false;
     let message = ""; // success/info from API
@@ -21,6 +25,10 @@
         const json_data = await login_devoteee(phone, temp_pwd);
 
         message = JSON.stringify(json_data);
+
+        if (json_data.message) {
+            goto("/dashboard");
+        }
     }
 
     // optional: allow enter key to submit from phone input
@@ -29,6 +37,9 @@
             requestLogin();
         }
     }
+    onMount(() => {
+        phone = +JSON.parse(localStorage.getItem("Mphone"));
+    });
 </script>
 
 <div class="page">
@@ -36,15 +47,10 @@
         <h2>Login (Phone and temp pwd )</h2>
 
         <div class="form-row">
-            <label>Phone number</label>
-            <input
-                type="text"
-                bind:value={phone}
-                placeholder="Enter phone number (e.g. 919900112233)"
-                on:keydown={onKeydown}
-                inputmode="tel"
-                autocomplete="tel"
-            />
+            <label>
+                phone number :
+                {phone}
+            </label>
         </div>
 
         <div class="form-row">
