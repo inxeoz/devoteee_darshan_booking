@@ -97,7 +97,7 @@ export async function update_profile(info: {}, login_as: string) {
   }
 }
 
-export async function login_request_devoteee(phone: number) {
+export async function login_request_admin(phone: number) {
   try {
     const res = await fetch(COMMON + "login_request", {
       method: "POST",
@@ -107,29 +107,6 @@ export async function login_request_devoteee(phone: number) {
       },
       body: JSON.stringify({
         phone: phone,
-      }),
-    });
-
-    const data = await res.json();
-    return data;
-  } catch (err: any) {
-    console.error(err);
-
-    return null;
-  }
-}
-
-export async function login_devoteee(phone: number, pwd: string) {
-  try {
-    const res = await fetch("/api/method/login", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        usr: phone,
-        pwd: pwd,
       }),
     });
 

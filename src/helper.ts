@@ -10,6 +10,29 @@ export function getCookieByName(name: string): string | null {
   return null;
 }
 
+export async function login_verify(phone: number, pwd: string) {
+  try {
+    const res = await fetch("/api/method/login", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        usr: phone,
+        pwd: pwd,
+      }),
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    console.error(err);
+
+    return null;
+  }
+}
+
 // export async function get_profile(login_as: string) {
 //   try {
 //     const res = await fetch("http://localhost:1880/get_profile", {
