@@ -244,12 +244,12 @@
                 >
                     <button
                         class="btn success xl"
-                        on:click={() => goto("/dashboard/mybooking")}
+                        on:click={() => goto("/devoteee/mybooking")}
                         >See your bookings</button
                     >
                     <button
                         class="btn primary subtle xl"
-                        on:click={() => goto("/dashboard")}
+                        on:click={() => goto("/devoteee")}
                         >Back to Dashboard</button
                     >
                 </div>
