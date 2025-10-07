@@ -104,7 +104,7 @@
             {#each defaultActions as action, i}
                 <Button
                     color={action.button_color}
-                    onClick={onActionClicked(action.site)}
+                    onClick={() => onActionClicked(action.site)}
                 >
                     {action.label}
                 </Button>

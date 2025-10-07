@@ -34,7 +34,7 @@
             toast.success("Login successful");
             // correct common typo "Devoteee" -> "Devotee"
             if (user_type === "Admin") await goto("/admin");
-            else if (user_type === "Devotee") await goto("/devoteee");
+            else if (user_type === "Devoteee") await goto("/devoteee");
             else if (user_type === "Attender") await goto("/attender");
             else {
                 // fallback route if user_type isn't set
