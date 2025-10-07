@@ -22,14 +22,12 @@
             loading = false;
             toast.error(json_data?.message?.err);
         } else {
-            goto("registration/login_request_devoteee");
+            goto("/login");
         }
 
         loading = false;
     }
 </script>
-
-<Toaster></Toaster>
 
 <!-- minimal layout wrapper (tiny Tailwind usage for centering) -->
 <div class="min-h-screen flex items-center justify-center p-4 bg-gray-50">
