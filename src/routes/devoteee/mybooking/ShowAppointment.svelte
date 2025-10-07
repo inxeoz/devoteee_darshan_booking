@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher, onDestroy } from "svelte";
-    import { Button, Modal, P } from "flowbite-svelte";
+    import { onMount, onDestroy, createEventDispatcher, tick } from "svelte";
+    import { Button, Modal } from "flowbite-svelte";
     import { get_appointment } from "@src/helper_devoteee.js";
 
     export let appointmentId: string;
@@ -10,6 +10,7 @@
     let error: string | null = null;
     let data: any = null;
     let showRaw = false;
+    // local modal open — used for Flowbite's bind:open (triggers modal open/close)
     let open = true;
 
     function formatDateTime(dateStr: string, timeStr: string) {
@@ -45,7 +46,6 @@
         }
         loading = true;
         error = null;
-        data = null;
         try {
             const payload = await get_appointment(appointmentId);
             data = payload?.message ?? payload;
@@ -56,13 +56,22 @@
         }
     }
 
-    function close() {
+    // Prevent recursion: use handleClose everywhere
+    async function handleClose() {
+        // start modal close animation by toggling bound open
         open = false;
-        dispatch("close");
+
+        // Wait a tick for DOM/Flowbite to start close animation; small delay helps animation finish
+        // If you prefer immediate unmount, dispatch immediately.
+        await tick();
+        // allow animation to run — adjust 200ms if needed to match Flowbite animation length
+        setTimeout(() => {
+            dispatch("close");
+        }, 200);
     }
 
     function onKeydown(e: KeyboardEvent) {
-        if (e.key === "Escape") close();
+        if (e.key === "Escape") handleClose();
     }
 
     onMount(() => {
@@ -73,10 +82,25 @@
     onDestroy(() => {
         window.removeEventListener("keydown", onKeydown);
     });
+
+    // safe stringify to avoid circular JSON crashes
+    function safeStringify(obj: any, space = 2) {
+        const seen = new WeakSet();
+        return JSON.stringify(
+            obj,
+            function (key, value) {
+                if (typeof value === "object" && value !== null) {
+                    if (seen.has(value)) return "[Circular]";
+                    seen.add(value);
+                }
+                return value;
+            },
+            space,
+        );
+    }
 </script>
 
-<!-- Flowbite modal usage: title prop + snippet footer() for footer -->
-<Modal bind:open title="Appointment Details" size="lg" on:close={close}>
+<Modal bind:open title="Appointment Details" size="lg" onclose={handleClose}>
     {#if loading}
         <div class="text-center text-gray-500 py-6">Loading appointment…</div>
     {:else if error}
@@ -154,11 +178,8 @@
             </Button>
             {#if showRaw}
                 <pre
-                    class="bg-gray-900 text-gray-100 mt-2 p-2 rounded overflow-auto max-h-60 text-sm">{JSON.stringify(
-                        data,
-                        null,
-                        2,
-                    )}</pre>
+                    class="bg-gray-900 text-gray-100 mt-2 p-2 rounded overflow-auto max-h-60 text-sm">
+{safeStringify(data, 2)}</pre>
             {/if}
         </div>
     {:else}
@@ -166,6 +187,10 @@
     {/if}
 
     {#snippet footer()}
-        <Button color="primary" on:click={close}>Close</Button>
+        <Button color="primary" on:click={handleClose}>Close</Button>
     {/snippet}
 </Modal>
+
+<style>
+    /* keep your modal-specific styles if any; Flowbite provides the modal visuals */
+</style>

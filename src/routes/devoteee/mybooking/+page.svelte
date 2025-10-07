@@ -1,23 +1,12 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
-    import { createEventDispatcher } from "svelte";
-    import { get_appointment_list } from "@src/helper_devoteee.js";
     import ShowAppointment from "./ShowAppointment.svelte";
-    import {
-        type Status,
-        type Companion,
-        type Booking,
-    } from "@src/appointment.js";
+    import { get_appointment_list } from "@src/helper_devoteee.js";
+    import type { Booking, Status } from "@src/appointment.js";
 
     let show = false;
-    let selectedId = "DA00011";
-
-    function openModal(details) {
-        console.log("value ", details["name"]);
-        selectedId = details["name"];
-        show = true;
-    }
+    let selectedId: string | null = null;
 
     export let limitStart = 0;
     export let pageLength = 10;
@@ -34,11 +23,7 @@
     export let upcoming: Booking[] = [];
     export let past: Booking[] = [];
 
-    let selected: Booking | null = null;
-
-    const dispatch = createEventDispatcher();
-
-    // ---- Helpers ----
+    // Helpers (badge class, date parsing, etc.) — keep your functions as-is
     function badgeClass(status: Status | string) {
         switch (status) {
             case "Approved":
@@ -48,26 +33,19 @@
             case "Pending Verification":
                 return "badge indigo";
             case "Rejected":
-                return "badge gray";
             case "Cancelled":
-                return "badge gray";
             case "Completed":
             case "Draft":
-                return "badge gray";
             default:
                 return "badge gray";
         }
     }
 
-    // Join date + time into a JS Date (best-effort, tolerant of formats)
     function toDate(b: Booking): Date | null {
         const datePart = (b?.darshan_date ?? "").toString().trim();
         const timePart = (b?.darshan_time ?? "").toString().trim();
         if (!datePart && !timePart) return null;
-
-        // If both present, try several common concatenations
         if (datePart && timePart) {
-            // Try "YYYY-MM-DD HH:mm:ss" and "YYYY-MM-DDTHH:mm:ss" and "YYYY-MM-DD HH:mm"
             const tryFormats = [
                 `${datePart} ${timePart}`,
                 `${datePart}T${timePart}`,
@@ -78,14 +56,11 @@
                 if (!isNaN(+d)) return d;
             }
         }
-
-        // Fall back to either piece
         if (datePart) {
             const d1 = new Date(datePart);
             if (!isNaN(+d1)) return d1;
         }
         if (timePart) {
-            // A bare time will be parsed relative to epoch (bad), so try to attach today's date
             try {
                 const today = new Date();
                 const [h, m, s] = timePart
@@ -104,7 +79,6 @@
                 // ignore
             }
         }
-
         return null;
     }
 
@@ -118,7 +92,6 @@
             if (!isNaN(t) && t >= now) up.push(b);
             else pa.push(b);
         }
-        // sort upcoming ascending by datetime, past descending
         up.sort(
             (a, b) => (toDate(a)?.getTime() ?? 0) - (toDate(b)?.getTime() ?? 0),
         );
@@ -148,32 +121,21 @@
         }
     }
 
-    /**
-     * FetchBookings
-     * - Accepts different shapes:
-     *   1) An array of bookings
-     *   2) An object with `.message` that contains per-darshan-type entries, each with "Appointment List" array
-     */
     async function FetchBookings() {
         loading = true;
         error = null;
         try {
             const data = await get_appointment_list(limitStart, pageLength);
-
-            // If API returned the curl sample you provided, data.message is an object with keys like "Vip Darshan"
             let bookings: Booking[] = [];
 
             if (Array.isArray(data)) {
                 bookings = data as Booking[];
             } else if (data && Array.isArray((data as any)?.message)) {
-                // Some APIs wrap message as array directly
                 bookings = (data as any).message as Booking[];
             } else if (data && typeof (data as any).message === "object") {
-                // Your curl response: message: { "Vip Darshan": { "Appointment List": [...] }, ... }
                 const msg = (data as any).message;
                 for (const key of Object.keys(msg)) {
                     const entry = msg[key];
-                    // prefer "Appointment List" property, but also handle other shapes
                     const arr = Array.isArray(entry?.["Appointment List"])
                         ? entry["Appointment List"]
                         : Array.isArray(entry?.appointments)
@@ -181,9 +143,8 @@
                           : Array.isArray(entry)
                             ? entry
                             : [];
-                    // Ensure darshan_type present (use the key if absent)
                     for (const it of arr) {
-                        const booking: Booking = {
+                        bookings.push({
                             name: it.name ?? it.id ?? "Unknown",
                             darshan_type: it.darshan_type ?? key,
                             darshan_time: it.darshan_time ?? it.time ?? "",
@@ -194,14 +155,12 @@
                             darshan_companion:
                                 it.darshan_companion ?? it.companions ?? [],
                             attender: it.attender ?? null,
-                        };
-                        bookings.push(booking);
+                        });
                     }
                 }
             } else if (Array.isArray((data as any)?.data)) {
                 bookings = (data as any).data as Booking[];
             } else {
-                // unknown shape - try to coerce to array if possible
                 bookings = Array.isArray(data as any) ? (data as any) : [];
             }
 
@@ -220,6 +179,20 @@
     onMount(() => {
         FetchBookings();
     });
+
+    // Open modal (set selected id and show)
+    function openModal(details: Booking) {
+        selectedId = details.name;
+        show = true;
+    }
+
+    // Parent handler for close event from child
+    function handleModalClose() {
+        // simply unmount the modal
+        show = false;
+        // optionally clear selectedId if you want
+        // selectedId = null;
+    }
 </script>
 
 <div class="page">
@@ -322,10 +295,8 @@
 </div>
 
 {#if show && selectedId}
-    <ShowAppointment
-        appointmentId={selectedId}
-        on:close={() => (show = false)}
-    />
+    <!-- parent listens to close and unmounts -->
+    <ShowAppointment appointmentId={selectedId} on:close={handleModalClose} />
 {/if}
 
 <style>
