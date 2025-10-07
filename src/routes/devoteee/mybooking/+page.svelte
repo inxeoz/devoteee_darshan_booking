@@ -5,7 +5,7 @@
     import { get_appointment_list } from "@src/helper_devoteee.js";
     import type { Booking, Status } from "@src/appointment.js";
 
-    import { Card, Button } from "flowbite-svelte";
+    import { Card, Button, Badge } from "flowbite-svelte";
 
     export let limitStart = 0;
     export let pageLength = 10;
@@ -24,13 +24,13 @@
     function badgeClass(status: Status | string) {
         switch (status) {
             case "Approved":
-                return "bg-emerald-50 text-emerald-700 ring-emerald-100";
+                return "green";
             case "Pending":
-                return "bg-sky-50 text-sky-700 ring-sky-100";
+                return "orange";
             case "Pending Verification":
-                return "bg-indigo-50 text-indigo-700 ring-indigo-100";
+                return "blue";
             default:
-                return "bg-gray-50 text-gray-600 ring-gray-100";
+                return "gray";
         }
     }
 
@@ -106,17 +106,15 @@
                                     Darshan: {b.darshan_type}
                                 </div>
                                 <div class="text-xs text-slate-400 mt-1">
-                                    {b.darshan_date}
+                                    {b.darshan_date}@
 
                                     {b.darshan_time}
                                 </div>
                             </div>
                             <div class="ml-4">
-                                <span
-                                    class={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ring-1 ${badgeClass(b.workflow_state)}`}
-                                >
+                                <Badge color={badgeClass(b.workflow_state)}>
                                     {b.workflow_state}
-                                </span>
+                                </Badge>
                             </div>
                         </Button>
                     {/each}
