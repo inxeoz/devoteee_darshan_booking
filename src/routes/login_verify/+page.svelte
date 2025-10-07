@@ -25,8 +25,8 @@
         let user_type = localStorage.getItem("Muser_type");
 
         if (json_data.message) {
-            if (user_type === "Admin") goto("/darshan_management");
-            if (user_type === "Devoteee") goto("/dashboard");
+            if (user_type === "Admin") goto("/admin");
+            if (user_type === "Devoteee") goto("/devoteee");
             if (user_type === "Attender") goto("/attender");
         }
     }
