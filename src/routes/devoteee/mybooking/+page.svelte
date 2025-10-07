@@ -2,7 +2,10 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import ShowAppointment from "@src/routes/ShowAppointment.svelte";
-    import { get_appointment_list } from "@src/helper_devoteee.js";
+    import {
+        get_appointment_list,
+        get_appointment,
+    } from "@src/helper_devoteee.js";
     import type { Booking, Status } from "@src/appointment.js";
 
     import { Card, Button, Badge } from "flowbite-svelte";
@@ -128,5 +131,9 @@
 </div>
 
 {#if show && selectedId}
-    <ShowAppointment appointmentId={selectedId} on:close={handleModalClose} />
+    <ShowAppointment
+        appointmentId={selectedId}
+        on:close={handleModalClose}
+        fetchAppointmentCall={get_appointment}
+    />
 {/if}

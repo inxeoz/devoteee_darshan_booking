@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy, createEventDispatcher, tick } from "svelte";
     import { Button, Modal, Badge } from "flowbite-svelte";
-    import { get_appointment } from "@src/helper_devoteee.js";
     import { formatDateTime } from "@src/utils.js";
 
     let workflow_state = "Demo";
@@ -9,6 +8,7 @@
 
     export let appointmentId: string;
 
+    export let fetchAppointmentCall: Function;
     export let approveCall; // this will receive the function
     export let rejectCall; // this will receive the function
 
@@ -29,7 +29,7 @@
         loading = true;
         error = null;
         try {
-            const payload = await get_appointment(appointmentId);
+            const payload = await fetchAppointmentCall(appointmentId);
             data = payload?.message ?? payload;
             workflow_state = data.workflow_state;
 

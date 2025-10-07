@@ -7,6 +7,7 @@
     import {
         get_appointment_stats,
         get_appointment_list,
+        get_appointment,
         approve_appointment,
         reject_appointment,
     } from "@src/helper_approver.js";
@@ -334,6 +335,7 @@
                 rejectCall={reject_appointment}
                 approveCall={approve_appointment}
                 on:close={handleModalClose}
+                fetchAppointmentCall={get_appointment}
             />
         {/if}
     </div>
