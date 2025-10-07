@@ -1,694 +1,345 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from "svelte";
-    import { get_appointment_list } from "@src/helper_approver.js";
-
+    import { onMount } from "svelte";
+    import { goto } from "$app/navigation";
     import ShowAppointment from "./ShowAppointment.svelte";
+    import { Card, Button, Badge } from "flowbite-svelte";
 
     import {
-        type Status,
-        type Companion,
-        type Booking,
-        type DarshanKind,
-        type Summary,
-        type PendingRow,
-        type Events,
-        frappeDateToISO,
-    } from "@src/appointment.js";
+        get_appointment_stats,
+        get_appointment_list,
+        approve_appointment,
+        reject_appointment,
+    } from "@src/helper_approver.js";
 
-    const dispatch = createEventDispatcher<Events>();
+    import type { Booking, Status } from "@src/appointment.js";
 
+    // --- public props (adjustable) ---
     export let limitStart = 0;
-    export let pageLength = 10;
+    export let pageLength = 20;
 
-    // ---- Local UI State ----
-    let asOf = new Date();
-    let loading = true;
+    export let heading = "Darshan Management Console";
+    export let subtitle =
+        "Workspace for Protocol Officer & Approver. Monitoring status as of today.";
+    export let sectionTitle = "Booking Summaries";
+
+    // --- local state ---
+    let loading = false;
     let error: string | null = null;
 
-    // seeded defaults for preview (kept so UI doesn't break if API slow)
-    let summaries: Summary[] = [
-        {
-            kind: "VIP Darshan",
-            received: 0,
-            approved: 0,
-            rejected: 0,
-            accent: "red",
-        },
-        {
-            kind: "Bhasm Arti",
-            received: 0,
-            approved: 0,
-            rejected: 0,
-            accent: "red",
-        },
-        {
-            kind: "Shigra Darshan",
-            received: 0,
-            approved: 0,
-            rejected: 0,
-            accent: "blue",
-        },
-        {
-            kind: "Localide Darshan",
-            received: 0,
-            approved: 0,
-            rejected: 0,
-            accent: "red",
-        },
-    ];
+    // stats structure is { "Vip Darshan": {Pending: 1, Approved:0,...}, ... }
+    let stats: Record<string, Record<string, number>> = {};
+    let bookings: Booking[] = []; // pending bookings list
+    let show = false;
+    let selectedId: string | null = null;
 
-    let pending: PendingRow[] = [];
-
-    // map for quick lookup by id
-    let appointmentsMap: Record<string, any> = {};
-
-    // UI: selection & filters
-    let selected: Set<string> = new Set();
-    let search = "";
-    let kindFilter: "" | DarshanKind = "";
-
-    // Modal state — show overlay by id only
-    let showDetails = false;
-    let selectedId: string = "";
-
-    const fmtDate = new Intl.DateTimeFormat("en-CA", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-    }); // yyyy-mm-dd
-
-    function normalizeKind(apiKind: string): DarshanKind {
-        const k = (apiKind || "").trim().toLowerCase();
-        if (k.includes("vip")) return "VIP Darshan";
-        if (k.includes("bhasm")) return "Bhasm Arti";
-        if (k.includes("shigra")) return "Shigra Darshan";
-        if (k.includes("localide")) return "Localide Darshan";
-        return "VIP Darshan";
-    }
-
-    function accentForKind(k: DarshanKind) {
-        switch (k) {
-            case "VIP Darshan":
-                return "red";
-            case "Bhasm Arti":
-                return "red";
-            case "Shigra Darshan":
+    function badgeClass(status: Status | string) {
+        switch (status) {
+            case "Approved":
+                return "green";
+            case "Pending":
+                return "orange";
+            case "Pending Verification":
                 return "blue";
-            case "Localide Darshan":
-                return "indigo";
+            case "Rejected":
+                return "red";
             default:
-                return "blue";
+                return "gray";
         }
     }
 
-    // ---- Fetching & mapping API response ----
-    async function fetchAppointments() {
+    // normalize keys returned by API to display order & titles we want
+    const DARSHAN_ORDER = [
+        { key: "Vip Darshan", title: "VIP Darshan" },
+        { key: "Bhasm Arti", title: "Bhasm Arti" },
+        { key: "Shigra Darshan", title: "Shigra Darshan" },
+        { key: "Localide Darshan", title: "Localide Darshan" },
+    ];
+
+    // --- API calls ---
+    async function fetchStats() {
         loading = true;
         error = null;
         try {
-            const data = await get_appointment_list(limitStart, pageLength);
-
-            console.log("bookings ", data.message);
-            const msg = data?.message ?? data;
-            if (!msg || typeof msg !== "object") {
-                throw new Error("Unexpected API response structure.");
-            }
-
-            appointmentsMap = {};
-            pending = [];
-
-            const kinds: DarshanKind[] = [
-                "VIP Darshan",
-                "Bhasm Arti",
-                "Shigra Darshan",
-                "Localide Darshan",
-            ];
-            const newSummaries: Summary[] = [];
-
-            for (const key of Object.keys(msg)) {
-                const entry = msg[key];
-                const kind = normalizeKind(key);
-
-                const Received = Number(entry?.Pending ?? 0) || 0;
-                const Approved = Number(entry?.Approved ?? 0) || 0;
-                const Rejected = Number(entry?.Rejected ?? 0) || 0;
-
-                newSummaries.push({
-                    kind,
-                    received: Received,
-                    approved: Approved,
-                    rejected: Rejected,
-                    accent: accentForKind(kind),
-                });
-
-                const list: any[] = Array.isArray(entry?.["Appointment List"])
-                    ? entry["Appointment List"]
-                    : [];
-
-                for (const appt of list) {
-                    const id =
-                        appt?.name ??
-                        `${kind.replace(/\s+/g, "_")}_${Math.random().toString(36).slice(2, 8)}`;
-                    const darshan_date =
-                        appt?.darshan_date ?? appt?.date ?? null;
-                    const darshan_time = appt?.darshan_time ?? null;
-                    const devotee = appt?.attender ?? null;
-                    const workflow_state = appt?.workflow_state ?? null;
-                    const normalizedKind = normalizeKind(
-                        appt?.darshan_type ?? key,
-                    );
-
-                    const iso =
-                        frappeDateToISO(darshan_date) ??
-                        new Date().toISOString();
-
-                    const row: PendingRow = {
-                        id,
-                        kind: normalizedKind,
-                        devotee,
-                        dateISO: iso,
-                        time: darshan_time ?? undefined,
-                        workflow_state,
-                        raw: appt,
-                    };
-
-                    pending.push(row);
-                    appointmentsMap[id] = appt;
-                }
-            }
-
-            // ensure every known kind exists
-            for (const k of kinds) {
-                if (!newSummaries.find((s) => s.kind === k)) {
-                    newSummaries.push({
-                        kind: k,
-                        received: 0,
-                        approved: 0,
-                        rejected: 0,
-                        accent: accentForKind(k),
-                    });
-                }
-            }
-
-            const order = {
-                "VIP Darshan": 0,
-                "Bhasm Arti": 1,
-                "Shigra Darshan": 2,
-                "Localide Darshan": 3,
-            };
-            newSummaries.sort(
-                (a, b) => (order[a.kind] ?? 99) - (order[b.kind] ?? 99),
-            );
-
-            summaries = newSummaries;
-            asOf = new Date();
+            const payload = await get_appointment_stats();
+            stats = payload?.message ?? {};
         } catch (err: any) {
-            console.error("fetchAppointments error", err);
-            error = err?.message ?? String(err);
+            error = err?.message ?? "Failed to fetch stats";
+            stats = {};
+        } finally {
+            loading = false;
+        }
+    }
+
+    async function fetchBookings() {
+        loading = true;
+        error = null;
+        try {
+            const payload = await get_appointment_list(limitStart, pageLength);
+            bookings = payload?.message ?? [];
+        } catch (err: any) {
+            error = err?.message ?? "Failed to fetch bookings";
+            bookings = [];
         } finally {
             loading = false;
         }
     }
 
     onMount(() => {
-        fetchAppointments();
+        // fetch both
+        fetchStats();
+        fetchBookings();
     });
 
-    // ---- Derived ----
-    $: filtered = pending
-        .filter((r) => (kindFilter ? r.kind === kindFilter : true))
-        .filter((r) => {
-            const q = search.trim().toLowerCase();
-            if (!q) return true;
-            return (
-                r.id.toLowerCase().includes(q) ||
-                (r.kind && r.kind.toLowerCase().includes(q)) ||
-                (r.devotee && r.devotee.toLowerCase().includes(q))
-            );
-        });
-
-    $: selectAllChecked =
-        filtered.length > 0 && filtered.every((r) => selected.has(r.id));
-
-    // ---- Actions ----
-    function toggleRow(id: string, checked: boolean) {
-        const s = new Set(selected);
-        checked ? s.add(id) : s.delete(id);
-        selected = s;
+    // --- UI actions ---
+    function openModal(details: Booking) {
+        selectedId = details.name ?? details.id ?? null;
+        show = true;
+    }
+    function handleModalClose() {
+        show = false;
     }
 
-    function toggleAll(checked: boolean) {
-        const s = new Set(selected);
-        filtered.forEach((r) => (checked ? s.add(r.id) : s.delete(r.id)));
-        selected = s;
+    // Approve / Reject a single appointment (by id/name)
+    async function approveSingle(appointment_id: string) {
+        loading = true;
+        error = null;
+        try {
+            await approve_appointment(appointment_id);
+            await fetchStats();
+            await fetchBookings();
+        } catch (err: any) {
+            error = err?.message ?? "Approve failed";
+        } finally {
+            loading = false;
+        }
     }
 
-    function approve(id: string) {
-        dispatch("approve", { id });
-    }
-    function reject(id: string) {
-        dispatch("reject", { id });
-    }
-    // open overlay using only the booking id (PendingRow.id)
-    function openDetails(id: string) {
-        const row = pending.find((p) => p.id === id);
-        if (!row) return; // nothing to show
-
-        // Always use the canonical booking id stored in the row
-        //
-        console.log("row ", row);
-        selectedId = row.id;
-        console.log("selectedId ", selectedId);
-
-        showDetails = true;
-    }
-
-    function view(id: string) {
-        dispatch("view", { id });
-        openDetails(id);
-    }
-
-    function approveSelected() {
-        if (selected.size) dispatch("approveBulk", { ids: [...selected] });
-    }
-    function rejectSelected() {
-        if (selected.size) dispatch("rejectBulk", { ids: [...selected] });
-    }
-
-    // totals shown at the bottom of each card
-    function totalBookings(s: Summary) {
-        return s.received + s.approved + s.rejected;
+    async function rejectSingle(appointment_id: string) {
+        loading = true;
+        error = null;
+        try {
+            await reject_appointment(appointment_id);
+            await fetchStats();
+            await fetchBookings();
+        } catch (err: any) {
+            error = err?.message ?? "Reject failed";
+        } finally {
+            loading = false;
+        }
     }
 </script>
 
-<div class="wrap">
-    <header class="header">
-        <h1>Darshan Management Console</h1>
-        <p class="muted">
-            Workspace for Protocol Officer &amp; Approver. Monitoring status as
-            of
-            {asOf.toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-            })}.
-        </p>
-    </header>
-
-    <h3 class="block-title">Booking Summaries</h3>
-
-    {#if loading}
-        <div style="padding:12px 0; color:#374151;">
-            Loading appointments...
-        </div>
-    {:else if error}
-        <div style="padding:12px; color:#b91c1c;">
-            Error loading appointments: {error}
-        </div>
-    {/if}
-
-    <section class="cards">
-        {#each summaries as s}
-            <article
-                class="card {s.accent ?? 'blue'}"
-                aria-label={`Summary for ${s.kind}`}
-            >
-                <h4 class="kind">{s.kind}</h4>
-                <div class="rows">
-                    <div class="row">
-                        <span>Received (Pending)</span><span class="num red"
-                            >{s.received}</span
-                        >
-                    </div>
-                    <div class="row">
-                        <span>Approved</span><span class="num green"
-                            >{s.approved}</span
-                        >
-                    </div>
-                    <div class="row">
-                        <span>Rejected</span><span class="num gray"
-                            >{s.rejected}</span
-                        >
-                    </div>
+<div class="min-h-screen bg-slate-50 p-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-slate-800">
+                        {heading}
+                    </h1>
+                    <p class="text-sm text-slate-500 mt-1">{subtitle}</p>
                 </div>
-                <div class="total">
-                    TOTAL BOOKINGS <span class="num">{totalBookings(s)}</span>
-                </div>
-            </article>
-        {/each}
-    </section>
-
-    <h3 class="block-title">Bookings Pending Verification</h3>
-
-    <div class="toolbar">
-        <div class="filters">
-            <input
-                class="input"
-                placeholder="Search by ID, name, or type"
-                bind:value={search}
-            />
-            <select class="input" bind:value={kindFilter}>
-                <option value="">All Types</option>
-                <option value="VIP Darshan">VIP Darshan</option>
-                <option value="Bhasm Arti">Bhasm Arti</option>
-                <option value="Shigra Darshan">Shigra Darshan</option>
-                <option value="Localide Darshan">Localide Darshan</option>
-            </select>
-        </div>
-        <div class="bulk">
-            <button
-                class="btn success"
-                on:click={approveSelected}
-                disabled={!selected.size}>Approve Selected</button
-            >
-            <button
-                class="btn danger"
-                on:click={rejectSelected}
-                disabled={!selected.size}>Reject Selected</button
-            >
-        </div>
-    </div>
-
-    <section
-        class="table-wrap"
-        role="region"
-        aria-label="Bookings Pending Verification"
-    >
-        <table class="table">
-            <thead>
-                <tr>
-                    <th style="width:36px">
-                        <input
-                            type="checkbox"
-                            checked={selectAllChecked}
-                            on:change={(e) =>
-                                toggleAll(
-                                    (e.target as HTMLInputElement).checked,
-                                )}
-                            aria-label="Select all"
-                        />
-                    </th>
-                    <th>Booking ID</th>
-                    <th>Type</th>
-                    <th>Devotee Name</th>
-                    <th>Date</th>
-                    <th style="text-align:center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {#each filtered as r}
-                    <tr>
-                        <td>
-                            <input
-                                type="checkbox"
-                                checked={selected.has(r.id)}
-                                on:change={(e) =>
-                                    toggleRow(
-                                        r.id,
-                                        (e.target as HTMLInputElement).checked,
-                                    )}
-                                aria-label={`Select booking ${r.id}`}
-                            />
-                        </td>
-                        <td>{r.id}</td>
-                        <td
-                            ><span
-                                class="type {r.kind
-                                    .replace(/\s+/g, '-')
-                                    .toLowerCase()}">{r.kind}</span
-                            ></td
-                        >
-                        <td>{r.devotee ?? "—"}</td>
-                        <td
-                            >{fmtDate.format(new Date(r.dateISO))}{r.time
-                                ? ` • ${r.time}`
-                                : ""}</td
-                        >
-                        <td class="actions">
-                            <button
-                                class="link green"
-                                on:click={() => approve(r.id)}>Approve</button
-                            >
-                            <span class="sep">|</span>
-                            <button class="link" on:click={() => view(r.id)}
-                                >View</button
-                            >
-                            <span class="sep">|</span>
-                            <button
-                                class="link red"
-                                on:click={() => reject(r.id)}>Reject</button
-                            >
-                        </td>
-                    </tr>
-                {/each}
-                {#if filtered.length === 0}
-                    <tr
-                        ><td colspan="6" class="empty"
-                            >No bookings found for the current filters.</td
-                        ></tr
+                <div class="flex items-center gap-3">
+                    <Button
+                        color="light"
+                        onclick={() => {
+                            fetchStats();
+                            fetchBookings();
+                        }}
+                        disabled={loading}
                     >
-                {/if}
-            </tbody>
-        </table>
-    </section>
+                        {#if loading}Refreshing...{:else}Refresh{/if}
+                    </Button>
+                </div>
+            </div>
 
-    {#if showDetails}
-        <ShowAppointment
-            appointmentId={selectedId}
-            on:close={() => {
-                showDetails = false;
-                selectedId = "";
-            }}
-        />
-    {/if}
+            <h2 class="text-lg font-bold text-slate-700 mt-6 mb-3">
+                {sectionTitle}
+            </h2>
+
+            <!-- Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {#each DARSHAN_ORDER as d}
+                    <Card class="rounded-xl p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800">
+                                    {d.title}
+                                </h3>
+                                <div class="mt-2 text-sm text-slate-600">
+                                    <div
+                                        class="flex items-center justify-between"
+                                    >
+                                        <span>Received (Pending)</span>
+                                        <span
+                                            class="font-semibold text-red-500"
+                                        >
+                                            {stats[d.key]?.Pending ?? 0}
+                                        </span>
+                                    </div>
+                                    <div
+                                        class="flex items-center justify-between mt-1"
+                                    >
+                                        <span>Approved</span>
+                                        <span
+                                            class="font-semibold text-green-600"
+                                            >{stats[d.key]?.Approved ?? 0}</span
+                                        >
+                                    </div>
+                                    <div
+                                        class="flex items-center justify-between mt-1"
+                                    >
+                                        <span>Rejected</span>
+                                        <span
+                                            class="font-semibold text-slate-500"
+                                            >{stats[d.key]?.Rejected ?? 0}</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400">
+                                    TOTAL BOOKINGS
+                                </div>
+                                <div class="text-2xl font-extrabold mt-1">
+                                    {Object.values(stats[d.key] ?? {}).reduce(
+                                        (a, b) => a + (b || 0),
+                                        0,
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                {/each}
+            </div>
+
+            <!-- Pending Bookings list -->
+            <div class="mt-6 bg-slate-50 p-4 rounded-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-slate-700">
+                        Bookings Pending Verification
+                    </h3>
+                    <div class="text-sm text-slate-500">
+                        Approve / Reject per booking below
+                    </div>
+                </div>
+
+                {#if error}
+                    <div class="text-red-600 mb-3">Error: {error}</div>
+                {/if}
+
+                <div class="mb-3">
+                    <input
+                        placeholder="Search by ID, name, or type"
+                        class="w-full rounded-md border p-2"
+                    />
+                </div>
+
+                <div class="overflow-x-auto rounded-lg">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr
+                                class="text-left text-xs uppercase text-slate-500"
+                            >
+                                <th class="p-3">Booking ID</th>
+                                <th class="p-3">Type</th>
+                                <th class="p-3">Devotee Name</th>
+                                <th class="p-3">Date</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#if loading && bookings.length === 0}
+                                <tr
+                                    ><td colspan="6" class="p-4 text-slate-500"
+                                        >Loading bookings…</td
+                                    ></tr
+                                >
+                            {:else if bookings.length === 0}
+                                <tr
+                                    ><td colspan="6" class="p-4 text-slate-500"
+                                        >No bookings found for the current
+                                        filters.</td
+                                    ></tr
+                                >
+                            {:else}
+                                {#each bookings as b (b.name)}
+                                    <tr class="border-t">
+                                        <td class="p-3 font-medium">{b.name}</td
+                                        >
+                                        <td class="p-3 text-sm text-slate-600"
+                                            >{b.darshan_type}</td
+                                        >
+                                        <td class="p-3"
+                                            >{b.devotee_name ?? b.name}</td
+                                        >
+                                        <td class="p-3 text-sm text-slate-500"
+                                            >{b.darshan_date} @ {b.darshan_time}</td
+                                        >
+                                        <td class="p-3"
+                                            ><Badge
+                                                color={badgeClass(
+                                                    b.workflow_state,
+                                                )}>{b.workflow_state}</Badge
+                                            ></td
+                                        >
+                                        <td class="p-3">
+                                            <div class="flex gap-2">
+                                                <Button
+                                                    color="light"
+                                                    size="xs"
+                                                    onclick={() => openModal(b)}
+                                                    >Open</Button
+                                                >
+
+                                                <Button
+                                                    color="success"
+                                                    size="xs"
+                                                    onclick={async () => {
+                                                        // quick approve single booking via helper
+                                                        if (!b.name) return;
+                                                        await approveSingle(
+                                                            b.name,
+                                                        );
+                                                    }}>Approve</Button
+                                                >
+
+                                                <Button
+                                                    color="failure"
+                                                    size="xs"
+                                                    onclick={async () => {
+                                                        // quick reject single booking via helper
+                                                        if (!b.name) return;
+                                                        await rejectSingle(
+                                                            b.name,
+                                                        );
+                                                    }}>Reject</Button
+                                                >
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {/each}
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment modal -->
+        {#if show && selectedId}
+            <ShowAppointment
+                appointmentId={selectedId}
+                on:close={handleModalClose}
+            />
+        {/if}
+    </div>
 </div>
 
 <style>
-    /* keep your original styles (omitted here for brevity in the preview answer) */
-    .wrap {
-        padding: 18px 18px 28px;
-        background: #f6f7f9;
-        min-height: 100vh;
-    }
-    .header h1 {
-        margin: 4px 0 2px;
-        font-size: 28px;
-        color: #101828;
-    }
-    .muted {
-        color: #6b7280;
-    }
-
-    .block-title {
-        margin: 18px 0 8px;
-        font-size: 18px;
-        color: #1f2937;
-        font-weight: 800;
-    }
-
-    /* Summary cards */
-    .cards {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 14px;
-    }
-    @media (max-width: 980px) {
-        .cards {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    @media (max-width: 560px) {
-        .cards {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .card {
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 6px 16px rgba(16, 24, 40, 0.08);
-        padding: 12px 14px 10px;
-        border-top: 4px solid #3b82f6;
-    }
-    .card.red {
-        border-top-color: #ef4444;
-    }
-    .card.blue {
-        border-top-color: #2563eb;
-    }
-    .card.indigo {
-        border-top-color: #4f46e5;
-    }
-    .card.teal {
-        border-top-color: #14b8a6;
-    }
-
-    .kind {
-        margin: 0 0 6px;
-        color: #0f172a;
-        font-size: 16px;
-        font-weight: 800;
-    }
-    .rows {
-        display: grid;
-        gap: 6px;
-        font-size: 13px;
-        color: #334155;
-    }
-    .row {
-        display: flex;
-        justify-content: space-between;
-    }
-    .num {
-        font-weight: 700;
-    }
-    .num.red {
-        color: #ef4444;
-    }
-    .num.green {
-        color: #16a34a;
-    }
-    .num.gray {
-        color: #6b7280;
-    }
-    .total {
-        margin-top: 6px;
-        padding-top: 6px;
-        border-top: 2px solid #e5e7eb;
-        font-weight: 800;
-        color: #111827;
-        font-size: 12px;
-        letter-spacing: 0.02em;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    /* Toolbar */
-    .toolbar {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        justify-content: space-between;
-        margin: 8px 0 10px;
-    }
-    .filters {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    .input {
-        height: 36px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 0 10px;
-        background: #fff;
-        outline: none;
-        transition:
-            box-shadow 0.15s ease,
-            border-color 0.15s ease;
-    }
-    .input:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    }
-
-    .bulk {
-        display: flex;
-        gap: 8px;
-    }
-    .btn {
-        height: 36px;
-        border: 0;
-        border-radius: 8px;
-        padding: 0 12px;
-        color: #fff;
-        font-weight: 700;
-        cursor: pointer;
-    }
-    .btn.success {
-        background: #16a34a;
-    }
-    .btn.danger {
-        background: #dc2626;
-    }
-    .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    /* Table */
-    .table-wrap {
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 6px 16px rgba(16, 24, 40, 0.08);
-        padding: 10px;
-        overflow-x: auto;
-    }
-    table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-    thead th {
-        text-align: left;
-        font-size: 12px;
-        color: #6b7280;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        padding: 10px 8px;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    tbody td {
-        padding: 10px 8px;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: 14px;
-        color: #0f172a;
-    }
-    tbody tr:hover {
-        background: #f8fafc;
-    }
-
-    .type {
-        font-weight: 700;
-    }
-    .type.vip-darshan {
-        color: #b91c1c;
-    }
-    .type.bhasm-arti {
-        color: #b91c1c;
-    }
-    .type.shigra-darshan {
-        color: #b45309;
-    }
-    .type.localide-darshan {
-        color: #2563eb;
-    }
-
-    .actions {
-        text-align: center;
-    }
-    .link {
-        background: transparent;
-        border: 0;
-        color: #2563eb;
-        cursor: pointer;
-        padding: 0;
-        font-weight: 600;
-    }
-    .link.green {
-        color: #16a34a;
-    }
-    .link.red {
-        color: #dc2626;
-    }
-    .sep {
-        color: #cbd5e1;
-        margin: 0 8px;
-    }
-    .empty {
-        text-align: center;
-        color: #6b7280;
-        padding: 20px 0;
+    /* small layout tweaks to match the screenshot's look */
+    :global(.card) {
+        border-radius: 12px;
     }
 </style>

@@ -136,3 +136,49 @@ export async function get_appointment_stats() {
     return null;
   }
 }
+
+export async function approve_appointment(appointment_id: string) {
+  try {
+    const res = await fetch(COMMON + "approve_appointment", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        appointment_id: appointment_id,
+      }),
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    console.error(err);
+
+    return null;
+  }
+}
+
+export async function reject_appointment(appointment_id: string) {
+  try {
+    const res = await fetch(COMMON + "reject_appointment", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        appointment_id: appointment_id,
+      }),
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    console.error(err);
+
+    return null;
+  }
+}
