@@ -2,55 +2,71 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { Card, Button, Label, Input } from "flowbite-svelte";
+    import { Badge } from "flowbite-svelte";
 
     import { login_verify } from "@src/helper.js";
+    import { toast } from "svelte-sonner";
 
     // phone as string to allow leading + / 0 etc
-    export let phone = "";
+    export let phone: string = "";
+    export let user_type: string = "";
 
-    let temp_pwd = "";
-    let loading = false;
-    let message = ""; // success/info from API
-    let error = ""; // error messages to show
+    let temp_pwd: string = "";
+    let loading: boolean = false;
+    let message: string = ""; // success/info from API
+    let error: string = ""; // error messages to show
 
-    async function requestLogin(e?: SubmitEvent) {
+    async function login_verify_action(e: SubmitEvent) {
         e?.preventDefault();
-        error = "";
+
         message = "";
         loading = true;
 
         const json_data = await login_verify(phone, temp_pwd);
 
-        message = JSON.stringify(json_data);
+        // store/display the API response in a friendly way
+        message =
+            typeof json_data === "string"
+                ? json_data
+                : JSON.stringify(json_data);
 
-        const user_type = localStorage.getItem("Muser_type");
-
-        if (json_data?.message) {
-            if (user_type === "Admin") goto("/admin");
-            if (user_type === "Devoteee") goto("/devoteee");
-            if (user_type === "Attender") goto("/attender");
+        if (json_data?.full_name) {
+            toast.success("Login successful");
+            // correct common typo "Devoteee" -> "Devotee"
+            if (user_type === "Admin") await goto("/admin");
+            else if (user_type === "Devotee") await goto("/devoteee");
+            else if (user_type === "Attender") await goto("/attender");
+            else {
+                // fallback route if user_type isn't set
+                await goto("/");
+            }
+        } else {
+            // show API message or generic error
+            toast.error(message || "Login failed");
+            loading = false;
         }
-
-        loading = false;
-    }
-
-    function onKeydown(e: KeyboardEvent) {
-        if (e.key === "Enter") requestLogin();
     }
 
     onMount(() => {
         const stored = localStorage.getItem("Mphone");
+        user_type = localStorage.getItem("Muser_type") || "";
+
         if (stored != null) phone = String(stored);
     });
 </script>
 
-<!-- minimal layout wrapper (tiny Tailwind for centering) -->
 <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
     <Card class="w-full max-w-md p-10">
-        <form class="space-y-4" on:submit|preventDefault={requestLogin}>
+        <form
+            class="space-y-4"
+            on:submit={login_verify_action}
+            aria-busy={loading}
+        >
             <h2 class="text-xl font-semibold text-gray-800">
                 Login (Phone & Temp Password)
             </h2>
+
+            <Badge color="indigo">{user_type}</Badge>
 
             <div>
                 <Label for="phone">Phone</Label>
@@ -59,7 +75,6 @@
                     type="text"
                     bind:value={phone}
                     placeholder="Phone"
-                    on:keydown={onKeydown}
                     inputmode="tel"
                     autocomplete="tel"
                 />
@@ -72,15 +87,13 @@
                     type="text"
                     bind:value={temp_pwd}
                     placeholder="Enter temp password"
-                    on:keydown={onKeydown}
+                    disabled={loading}
                 />
             </div>
 
-            <div>
-                <Button type="submit" class="w-full" disabled={loading}>
-                    {#if loading}Requesting...{:else}Request Login{/if}
-                </Button>
-            </div>
+            <Button type="submit" disabled={loading} aria-disabled={loading}>
+                {#if loading}Verifying...{:else}Verify Login{/if}
+            </Button>
         </form>
     </Card>
 </div>
