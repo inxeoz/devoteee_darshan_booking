@@ -40,9 +40,6 @@
     }
 </script>
 
-<!-- Remove if Toaster is already in +layout.svelte -->
-<Toaster position="top-right" />
-
 <div class="min-h-screen bg-gray-50 flex items-center justify-center">
     <Card class="w-full max-w-md p-10">
         <h2 class="text-2xl font-bold text-center mb-4">Login Request</h2>

@@ -1,16 +1,5 @@
 <script lang="ts">
-    import { toast } from "svelte-sonner";
     import { Card, Button, Avatar } from "flowbite-svelte";
-
-    export let user = "Guest";
-
-    function mahakaalDarshan() {
-        toast.success("🙏 जय महाकाल! Mahakaal Darshan is booked.");
-    }
-
-    function vipDarshan() {
-        toast.success("🌟 VIP Darshan booked successfully!");
-    }
 </script>
 
 <!-- nano Tailwind layout wrapper -->
@@ -26,7 +15,7 @@
             <h2
                 style="font-size:1.8rem; font-weight:700; color:#673ab7; margin:1rem 0 0.5rem;"
             >
-                Welcome, {user}!
+                Welcome
             </h2>
 
             <p style="color:#444; max-width:480px; margin:0 auto 1.5rem;">
@@ -65,15 +54,6 @@
                         staff, and special mementos.
                     </p>
                 </Card>
-            </div>
-
-            <div style="display:flex; justify-content:center; gap:1rem;">
-                <Button color="purple" on:click={mahakaalDarshan}
-                    >Book Mahakaal Darshan</Button
-                >
-                <Button color="yellow" on:click={vipDarshan}
-                    >Book VIP Darshan</Button
-                >
             </div>
         </div>
     </Card>

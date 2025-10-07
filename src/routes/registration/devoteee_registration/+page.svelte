@@ -2,6 +2,7 @@
     import { goto } from "$app/navigation";
     import { Card, Button, Label, Input } from "flowbite-svelte";
     import { registration_devoteee } from "@src/helper_devoteee.js";
+    import { toast, Toaster } from "svelte-sonner";
 
     // phone as string (allows leading + / 0)
     let phone = "";
@@ -17,14 +18,18 @@
 
         const json_data = await registration_devoteee(phone);
 
-        if (json_data?.message) {
-            // navigate to the login request page (adjust path if needed)
+        if (json_data?.message?.err) {
+            loading = false;
+            toast.error(json_data?.message?.err);
+        } else {
             goto("registration/login_request_devoteee");
         }
 
         loading = false;
     }
 </script>
+
+<Toaster></Toaster>
 
 <!-- minimal layout wrapper (tiny Tailwind usage for centering) -->
 <div class="min-h-screen flex items-center justify-center p-4 bg-gray-50">
