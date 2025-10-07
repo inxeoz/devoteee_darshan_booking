@@ -1,5 +1,5 @@
 const COMMON =
-  "/api/method/mahakaal.darshan_booking.doctype.darshan_admin_profile.darshan_admin_profile.";
+  "/api/method/mahakaal.darshan_booking.doctype.darshan_approver_profile.darshan_approver_profile.";
 
 export async function get_profile() {
   try {
@@ -96,7 +96,7 @@ export async function update_profile(info: {}, login_as: string) {
   }
 }
 
-export async function login_request_admin(phone: number) {
+export async function login_request_approver(phone: number) {
   try {
     const res = await fetch(COMMON + "login_request", {
       method: "POST",

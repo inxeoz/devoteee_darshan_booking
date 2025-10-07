@@ -33,7 +33,7 @@
         if (json_data?.full_name) {
             toast.success("Login successful");
             // correct common typo "Devoteee" -> "Devotee"
-            if (user_type === "Admin") await goto("/admin");
+            if (user_type === "Approver") await goto("/approver");
             else if (user_type === "Devoteee") await goto("/devoteee");
             else if (user_type === "Attender") await goto("/attender");
             else {

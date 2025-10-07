@@ -1,20 +1,20 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { Toaster, toast } from "svelte-sonner";
-    import { login_request_admin } from "@src/helper_admin.js";
+    import { login_request_approver } from "@src/helper_approver.js";
     import { login_request_devoteee } from "@src/helper_devoteee.js";
     import { login_request_attender } from "@src/helper_attender.js";
 
     // import Flowbite components
     import { Label, Input, Select, Button, Card } from "flowbite-svelte";
 
-    let user_type = "Admin";
+    let user_type = "Devoteee";
     let phone = "";
     let loading = false;
     let res;
 
     const requestMap = {
-        Admin: login_request_admin,
+        Approver: login_request_approver,
         Devoteee: login_request_devoteee,
         Attender: login_request_attender,
     };
@@ -59,7 +59,7 @@
             <div>
                 <Label for="user_type">User Type</Label>
                 <Select id="user_type" bind:value={user_type}>
-                    <option>Admin</option>
+                    <option>Approver</option>
                     <option>Devoteee</option>
                     <option>Attender</option>
                 </Select>

@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
-    import { get_appointment_list } from "@src/helper_admin.js";
+    import { get_appointment_list } from "@src/helper_approver.js";
 
-    import ShowAppointment from "@src/routes/darshan_management/ShowAppointment.svelte";
+    import ShowAppointment from "./ShowAppointment.svelte";
 
     import {
         type Status,
@@ -285,7 +285,8 @@
     <header class="header">
         <h1>Darshan Management Console</h1>
         <p class="muted">
-            Workspace for Protocol Officer &amp; Admin. Monitoring status as of
+            Workspace for Protocol Officer &amp; Approver. Monitoring status as
+            of
             {asOf.toLocaleDateString(undefined, {
                 year: "numeric",
                 month: "long",
