@@ -50,6 +50,7 @@
     export let accentIndex = 2;
 
     function onActionClicked(site: string | undefined) {
+        console.log(site);
         if (site) goto(site);
     }
 
@@ -103,7 +104,7 @@
             {#each defaultActions as action, i}
                 <Button
                     color={action.button_color}
-                    on:click={() => onActionClicked(action.site)}
+                    onClick={onActionClicked(action.site)}
                 >
                     {action.label}
                 </Button>

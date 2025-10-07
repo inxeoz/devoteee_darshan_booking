@@ -77,6 +77,10 @@
                     Request Login
                 {/if}
             </Button>
+
+            <Button outline color="blue" href="/login_verify"
+                >Verify login</Button
+            >
         </form>
     </Card>
 </div>
