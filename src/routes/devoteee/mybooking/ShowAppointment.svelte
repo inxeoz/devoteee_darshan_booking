@@ -187,7 +187,7 @@
     {/if}
 
     {#snippet footer()}
-        <Button color="primary" on:click={handleClose}>Close</Button>
+        <Button color="primary" onclick={handleClose}>Close</Button>
     {/snippet}
 </Modal>
 
