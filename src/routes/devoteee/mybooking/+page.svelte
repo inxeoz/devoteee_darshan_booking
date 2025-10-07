@@ -5,6 +5,8 @@
     import { get_appointment_list } from "@src/helper_devoteee.js";
     import type { Booking, Status } from "@src/appointment.js";
 
+    import { Card, Button } from "flowbite-svelte";
+
     export let limitStart = 0;
     export let pageLength = 10;
 
@@ -62,14 +64,12 @@
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold text-slate-700">{sectionTitle}</h2>
             <div class="flex items-center gap-3">
-                <button
-                    class="text-sky-600 hover:underline"
-                    on:click={() => goto("/dashboard")}
-                    >← Back to Dashboard</button
+                <Button color="light" onclick={() => goto("/devoteee")}
+                    >← devoteee dashboard</Button
                 >
-                <button
-                    class="btn inline-flex items-center gap-2 px-3 py-1.5 rounded-md border bg-white shadow-sm text-sm text-slate-700"
-                    on:click={FetchBookings}
+                <Button
+                    color="light"
+                    onclick={FetchBookings}
                     disabled={loading}
                 >
                     {#if loading}
@@ -77,7 +77,7 @@
                     {:else}
                         Refresh
                     {/if}
-                </button>
+                </Button>
             </div>
         </div>
 
@@ -92,9 +92,10 @@
                     <div class="text-slate-500">Loading bookings…</div>
                 {:else}
                     {#each bookings as b}
-                        <button
+                        <Button
                             class="flex items-start justify-between p-4 rounded-xl border bg-white hover:shadow-sm"
-                            on:click={() => openModal(b)}
+                            color="light"
+                            onclick={() => openModal(b)}
                             aria-label={`Open booking ${b.name}`}
                         >
                             <div class="text-left">
@@ -117,7 +118,7 @@
                                     {b.workflow_state}
                                 </span>
                             </div>
-                        </button>
+                        </Button>
                     {/each}
                     {#if bookings.length === 0 && !loading}
                         <div class="text-slate-500">No bookings.</div>

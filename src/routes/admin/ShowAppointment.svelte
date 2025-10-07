@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount, createEventDispatcher, onDestroy } from "svelte";
     import { get_appointment } from "@src/helper_admin.js";
+    import { Card } from "flowbite-svelte";
     // Props
     export let appointmentId: string; // required
     const dispatch = createEventDispatcher();
