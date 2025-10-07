@@ -202,3 +202,29 @@ export async function get_appointment_stats() {
     return null;
   }
 }
+
+const VIP_BOOKING =
+  "/api/method/mahakaal.darshan_booking.doctype.vip_darshan_booking_slot.vip_darshan_booking_slot.";
+
+export async function get_vip_booking_slot_info(slot_date: string) {
+  try {
+    const res = await fetch(VIP_BOOKING + "get_slot_occupancy_info", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        slot_date: slot_date,
+      }),
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    console.error(err);
+
+    return null;
+  }
+}

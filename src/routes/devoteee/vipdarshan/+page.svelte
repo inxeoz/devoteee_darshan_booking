@@ -1,6 +1,9 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { create_appointment } from "@src/helper_devoteee.js";
+    import {
+        create_appointment,
+        get_vip_booking_slot_info,
+    } from "@src/helper_devoteee.js";
 
     // Props
     export let title = "Book VIP Darshan (Protocol)";
@@ -26,7 +29,8 @@
     let selectedProtocolValue = "";
     let companions: { name: string; phone: string; age: number }[] = [];
     let visitDate = "";
-    let selectedSlot = "";
+    let selectedSlotName = "";
+    let selectedSlottime = "";
     let authorityLetterFile: File | null = null;
     let saveAsDraft = true;
 
@@ -35,13 +39,12 @@
     let bookingId: string | number | null = null;
 
     const slots = [
-        { time: "08:00 AM", seats: 9 },
-        { time: "09:30 AM", seats: 29 },
-        { time: "11:00 AM", seats: 24 },
-        { time: "01:00 PM", seats: 42 },
-        { time: "03:00 PM", seats: 5 },
-        { time: "04:30 PM", seats: 36 },
+        { time: "08:00 AM", seats: 9, slot_name: "slot1" },
+        { time: "09:30 AM", seats: 29, slot_name: "slot2" },
+        { time: "11:00 AM", seats: 24, slot_name: "slot3" },
     ];
+
+    let slots_data: any = null;
 
     $: feePerPerson =
         protocols.find((p) => p.value === selectedProtocolValue)?.fee ?? 0;
@@ -69,11 +72,16 @@
     }
 
     async function submitBooking() {
+        // console.log("DTATE", visitDate);
         loading = true;
 
         const details = {
             darshan_date: visitDate,
-            darshan_time: selectedSlot ? slotTimeTo24hr(selectedSlot) : "",
+            darshan_time: selectedSlottime
+                ? slotTimeTo24hr(selectedSlottime)
+                : "",
+
+            slot_name: selectedSlotName,
             darshan_with_protocol: 1,
             protocol_rank: selectedProtocolValue || "",
             government_authority_letter: authorityLetterFile
@@ -105,7 +113,19 @@
     }
 
     function slotClass(s) {
-        return `${selectedSlot === s.time ? "selected" : ""} ${s.seats === 0 ? "disabled" : ""}`;
+        return `${selectedSlotName === s.time ? "selected" : ""} ${s.seats === 0 ? "disabled" : ""}`;
+    }
+
+    async function fetch_slot_info(date: string) {
+        const data = await get_vip_booking_slot_info(date);
+        slots_data = data.message;
+
+        console.log(slots_data);
+    }
+
+    function select_slot(slot_name: string, slot_time: string) {
+        selectedSlotName = slot_name;
+        selectedSlottime = slot_time;
     }
 </script>
 
@@ -182,21 +202,25 @@
 
             <!-- Date -->
             <label class="label">Date of Visit</label>
-            <input class="input" type="date" bind:value={visitDate} />
+            <input
+                class="input"
+                type="date"
+                bind:value={visitDate}
+                on:change={() => fetch_slot_info(visitDate)}
+            />
 
             <!-- Slots -->
             <label class="label">Available Slots</label>
             <div class="slots-grid">
-                {#each slots as s}
+                {#each slots_data as s}
                     <button
                         class="slot-btn {slotClass(s)}"
                         on:click={() =>
-                            (selectedSlot =
-                                s.seats === 0 ? selectedSlot : s.time)}
+                            select_slot(s.slot_name, s.slot_start_time)}
                         disabled={s.seats === 0}
                     >
-                        <div class="slot-time">{s.time}</div>
-                        <div class="slot-seats">{s.seats} Seats</div>
+                        <div class="slot-time">{s.slot_start_time}</div>
+                        <div class="slot-seats">{s.slot_capacity} Seats</div>
                     </button>
                 {/each}
             </div>
