@@ -331,6 +331,8 @@
         {#if show && selectedId}
             <ShowAppointment
                 appointmentId={selectedId}
+                rejectCall={reject_appointment}
+                approveCall={approve_appointment}
                 on:close={handleModalClose}
             />
         {/if}
