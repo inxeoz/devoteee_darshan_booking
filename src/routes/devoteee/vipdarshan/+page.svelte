@@ -119,7 +119,7 @@
             <button
                 class="link"
                 type="button"
-                on:click={() => goto("/dashboard")}>← Back</button
+                on:click={() => goto("/devoteee")}>← Devoteee Dashboard</button
             >
         </div>
 
