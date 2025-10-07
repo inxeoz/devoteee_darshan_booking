@@ -9,13 +9,10 @@
 <!-- 🌐 Global navigation bar -->
 <nav class="bg-blue-500 text-white flex flex-wrap gap-x-4 px-4 py-3">
     <a href="/" class="hover:underline">Home</a>
-    <a href="/registration/devoteee_registration" class="hover:underline"
-        >Registration</a
-    >
+
+    <a href="/devoteee/registration" class="hover:underline">Registration</a>
     <a href="/login" class="hover:underline">Login</a>
-    <a href="/dashboard" class="hover:underline">Dashboard</a>
-    <a href="/darshan_management" class="hover:underline">Darshan Management</a>
-    <a href="/attender" class="hover:underline">Attender</a>
+
     <a href="/demo" class="hover:underline">Demo</a>
 </nav>
 
