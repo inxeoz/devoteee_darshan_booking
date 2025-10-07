@@ -32,14 +32,6 @@
         }
     }
 
-    function formatDateRaw(b: Booking) {
-        const date = b.darshan_date ?? "";
-        const time = b.darshan_time ?? "";
-        const note = b.timeNote ? ` (${b.timeNote})` : "";
-        const combined = `${date}${date && time ? " " : ""}${time}${note}`;
-        return combined.trim() || "—";
-    }
-
     async function FetchBookings() {
         loading = true;
         error = null;
@@ -113,7 +105,9 @@
                                     Darshan: {b.darshan_type}
                                 </div>
                                 <div class="text-xs text-slate-400 mt-1">
-                                    {formatDateRaw(b)}
+                                    {b.darshan_date}
+
+                                    {b.darshan_time}
                                 </div>
                             </div>
                             <div class="ml-4">
