@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
-    import ShowAppointment from "./ShowAppointment.svelte";
+    import ShowAppointment from "@src/routes/ShowAppointment.svelte";
     import { Card, Button, Badge } from "flowbite-svelte";
 
     import {

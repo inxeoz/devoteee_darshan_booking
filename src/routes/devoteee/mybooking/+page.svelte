@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
-    import ShowAppointment from "./ShowAppointment.svelte";
+    import ShowAppointment from "@src/routes/ShowAppointment.svelte";
     import { get_appointment_list } from "@src/helper_devoteee.js";
     import type { Booking, Status } from "@src/appointment.js";
 

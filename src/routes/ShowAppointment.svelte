@@ -1,10 +1,17 @@
 <script lang="ts">
     import { onMount, onDestroy, createEventDispatcher, tick } from "svelte";
-    import { Button, Modal } from "flowbite-svelte";
+    import { Button, Modal, Badge } from "flowbite-svelte";
     import { get_appointment } from "@src/helper_devoteee.js";
     import { formatDateTime } from "@src/utils.js";
 
+    let workflow_state = "Demo";
+    let user_type: string;
+
     export let appointmentId: string;
+
+    export let approveCall; // this will receive the function
+    export let rejectCall; // this will receive the function
+
     const dispatch = createEventDispatcher();
 
     let loading = false;
@@ -24,6 +31,9 @@
         try {
             const payload = await get_appointment(appointmentId);
             data = payload?.message ?? payload;
+            workflow_state = data.workflow_state;
+
+            console.log("SSS", workflow_state === "Pending");
         } catch (err: any) {
             error = err?.message ?? String(err);
         } finally {
@@ -50,6 +60,9 @@
     }
 
     onMount(() => {
+        user_type = localStorage.getItem("Muser_type") || "";
+
+        console.log("usudu", user_type);
         fetchAppointment();
         window.addEventListener("keydown", onKeydown);
     });
@@ -88,7 +101,12 @@
             </div>
             <div>
                 <strong>Status:</strong>
-                {data.workflow_state ?? data.status ?? "—"}
+
+                <Badge
+                    color={data.workflow_state === "Rejected" ? "red" : "green"}
+                >
+                    {data.workflow_state ?? data.status ?? "—"}
+                </Badge>
             </div>
             <div><strong>Type:</strong> {data.darshan_type ?? "—"}</div>
             <div>
@@ -162,7 +180,26 @@
     {/if}
 
     {#snippet footer()}
-        <Button color="primary" onclick={handleClose}>Close</Button>
+        {#if workflow_state === "Pending" && user_type === "Approver"}
+            <div class="flex justify-end items-center w-full gap-8">
+                <Button
+                    color="primary"
+                    pill
+                    onclick={() => {
+                        rejectCall(appointmentId);
+                        fetchAppointment();
+                    }}>Reject</Button
+                >
+                <Button
+                    color="green"
+                    pill
+                    onclick={() => {
+                        approveCall(appointmentId);
+                        fetchAppointment();
+                    }}>Approve</Button
+                >
+            </div>
+        {/if}
     {/snippet}
 </Modal>
 
