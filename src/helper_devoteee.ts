@@ -168,7 +168,6 @@ export async function registration_devoteee(phone: number) {
   try {
     const res = await fetch(COMMON + "create_devoteee_user", {
       method: "POST",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },

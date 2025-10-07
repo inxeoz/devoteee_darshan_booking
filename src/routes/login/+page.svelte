@@ -5,7 +5,10 @@
     import { login_request_devoteee } from "@src/helper_devoteee.js";
     import { login_request_attender } from "@src/helper_attender.js";
 
-    let user_type = "Devoteee";
+    // import Flowbite components
+    import { Label, Input, Select, Button, Card } from "flowbite-svelte";
+
+    let user_type = "Admin";
     let phone = "";
     let loading = false;
     let res;
@@ -40,72 +43,43 @@
 <!-- Remove if Toaster is already in +layout.svelte -->
 <Toaster position="top-right" />
 
-<form class="card" on:submit|preventDefault={requestLogin}>
-    <h2>Login Request</h2>
+<div class="min-h-screen bg-gray-50 flex items-center justify-center">
+    <Card class="w-full max-w-md p-10">
+        <h2 class="text-2xl font-bold text-center mb-4">Login Request</h2>
 
-    <label>
-        Phone
-        <input type="tel" bind:value={phone} placeholder="e.g. +919900112233" />
-    </label>
+        <form class="space-y-4" on:submit|preventDefault={requestLogin}>
+            <div>
+                <Label for="phone">Phone</Label>
+                <Input
+                    id="phone"
+                    type="tel"
+                    bind:value={phone}
+                    placeholder="000"
+                    required
+                />
+            </div>
 
-    <label>
-        User Type
-        <select bind:value={user_type}>
-            <option>Admin</option>
-            <option>Devoteee</option>
-            <option>Attender</option>
-        </select>
-    </label>
+            <div>
+                <Label for="user_type">User Type</Label>
+                <Select id="user_type" bind:value={user_type}>
+                    <option>Admin</option>
+                    <option>Devoteee</option>
+                    <option>Attender</option>
+                </Select>
+            </div>
 
-    <button disabled={loading}>
-        {#if loading}Requesting...{:else}Request Login{/if}
-    </button>
-</form>
-
-<style>
-    :global(body) {
-        font-family:
-            system-ui,
-            Segoe UI,
-            Roboto,
-            Arial,
-            sans-serif;
-        background: #f3f6f8;
-    }
-    .card {
-        width: 340px;
-        margin: 10vh auto;
-        padding: 22px;
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-        text-align: center;
-    }
-    label {
-        display: block;
-        margin: 12px 0;
-        text-align: left;
-        font-size: 14px;
-    }
-    input,
-    select {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-    }
-    button {
-        width: 100%;
-        padding: 10px;
-        margin-top: 12px;
-        border: none;
-        border-radius: 6px;
-        background: #2563eb;
-        color: white;
-        font-weight: 600;
-    }
-    button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-</style>
+            <Button
+                type="submit"
+                color="blue"
+                class="w-full"
+                disabled={loading}
+            >
+                {#if loading}
+                    Requesting...
+                {:else}
+                    Request Login
+                {/if}
+            </Button>
+        </form>
+    </Card>
+</div>
