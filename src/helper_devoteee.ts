@@ -124,7 +124,6 @@ export async function login_request_devoteee(phone: number) {
   try {
     const res = await fetch(COMMON + "login_request", {
       method: "POST",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },

@@ -1,186 +1,111 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { onMount } from "svelte";
+    import { Toaster, toast } from "svelte-sonner";
     import { login_request_admin } from "@src/helper_admin.js";
     import { login_request_devoteee } from "@src/helper_devoteee.js";
     import { login_request_attender } from "@src/helper_attender.js";
 
-    import { json } from "@sveltejs/kit";
-
-    interface LoginResponse {
-        message?: string;
-    }
-
-    let json_data: LoginResponse;
-
-    let user_type = "";
-    let phone = 0;
+    let user_type = "Devoteee";
+    let phone = "";
     let loading = false;
-    let message = ""; // success/info from API
-    let error = ""; // error messages to show
-    let accepted = false; // optional: show confirmation to proceed to dashboard
+    let res;
 
-    async function requestLogin() {
-        error = "";
-        message = "";
+    const requestMap = {
+        Admin: login_request_admin,
+        Devoteee: login_request_devoteee,
+        Attender: login_request_attender,
+    };
 
+    async function requestLogin(e?: SubmitEvent) {
+        e?.preventDefault();
         loading = true;
 
         localStorage.setItem("Mphone", phone);
         localStorage.setItem("Muser_type", user_type);
 
-        if (user_type === "Admin") {
-            json_data = await login_request_admin(phone);
-        }
+        const fn = requestMap[user_type];
+        res = await fn(phone);
 
-        if (user_type === "Devoteee") {
-            json_data = await login_request_devoteee(phone);
-        }
-
-        if (user_type === "Attender") {
-            json_data = await login_request_attender(phone);
-        }
-
-        if (json_data.message) {
+        if (res?.message?.err) {
+            toast.error(res.message.err);
+        } else {
+            toast.success("OTP sent successfully");
             goto("/login_verify");
         }
-    }
 
-    // optional: allow enter key to submit from phone input
-    function onKeydown(e) {
-        if (e.key === "Enter") {
-            requestLogin();
-        }
+        loading = false;
     }
 </script>
 
-<div class="page">
-    <div class="card">
-        <h2>Login Request (Phone)</h2>
+<!-- Remove if Toaster is already in +layout.svelte -->
+<Toaster position="top-right" />
 
-        <div class="form-row">
-            <label>Phone number</label>
-            <input
-                type="text"
-                bind:value={phone}
-                placeholder="Enter phone number (e.g. 919900112233)"
-                on:keydown={onKeydown}
-                inputmode="tel"
-                autocomplete="tel"
-            />
-        </div>
+<form class="card" on:submit|preventDefault={requestLogin}>
+    <h2>Login Request</h2>
 
-        <div class="form-row">
-            <label>User Type</label>
-            <select bind:value={user_type}>
-                <option value="Admin">Admin</option>
-                <option value="Devoteee">Devoteee</option>
-                <option value="Attender">Attender</option>
-            </select>
-        </div>
+    <label>
+        Phone
+        <input type="tel" bind:value={phone} placeholder="e.g. +919900112233" />
+    </label>
 
-        <div class="form-row">
-            <button
-                class="login-btn"
-                on:click={requestLogin}
-                disabled={loading}
-            >
-                {#if loading}
-                    Requesting...
-                {:else}
-                    Request Login
-                {/if}
-            </button>
-        </div>
+    <label>
+        User Type
+        <select bind:value={user_type}>
+            <option>Admin</option>
+            <option>Devoteee</option>
+            <option>Attender</option>
+        </select>
+    </label>
 
-        {#if message}
-            <div class="api-message">{message}</div>
-        {/if}
-
-        {#if error}
-            <div class="api-error">{error}</div>
-        {/if}
-    </div>
-</div>
+    <button disabled={loading}>
+        {#if loading}Requesting...{:else}Request Login{/if}
+    </button>
+</form>
 
 <style>
-    .page {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    :global(body) {
+        font-family:
+            system-ui,
+            Segoe UI,
+            Roboto,
+            Arial,
+            sans-serif;
         background: #f3f6f8;
     }
-
     .card {
+        width: 340px;
+        margin: 10vh auto;
+        padding: 22px;
         background: #fff;
-        padding: 24px;
         border-radius: 10px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-        width: 380px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
         text-align: center;
     }
-
-    h2 {
-        margin-bottom: 16px;
-    }
-
-    .form-row {
-        margin-bottom: 14px;
-        text-align: left;
-    }
-
     label {
         display: block;
-        margin-bottom: 6px;
+        margin: 12px 0;
+        text-align: left;
         font-size: 14px;
     }
-
-    input {
+    input,
+    select {
         width: 100%;
         padding: 10px;
-        border-radius: 6px;
         border: 1px solid #ccc;
-        box-sizing: border-box;
+        border-radius: 6px;
     }
-
     button {
+        width: 100%;
         padding: 10px;
+        margin-top: 12px;
         border: none;
         border-radius: 6px;
         background: #2563eb;
         color: white;
-        cursor: pointer;
-        font-weight: bold;
+        font-weight: 600;
     }
-
     button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-    }
-
-    .login-btn {
-        width: 100%;
-        margin-top: 10px;
-    }
-
-    .api-message {
-        margin-top: 12px;
-        padding: 10px;
-        background: #ecfdf5;
-        border: 1px solid #bbf7d0;
-        border-radius: 6px;
-        color: #065f46;
-        text-align: left;
-    }
-
-    .api-error {
-        margin-top: 12px;
-        padding: 10px;
-        background: #fff1f2;
-        border: 1px solid #fecaca;
-        border-radius: 6px;
-        color: #991b1b;
-        text-align: left;
     }
 </style>

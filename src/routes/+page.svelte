@@ -1,4 +1,5 @@
 <script>
+    import { Toaster, toast } from "svelte-sonner";
     export let user = "Guest";
     function mahakaalDarshan() {
         alert("जय महाकाल! Mahakaal Darshan is booked.");
@@ -8,6 +9,7 @@
     }
 </script>
 
+<Toaster />
 <div class="main-bg">
     <div class="welcome-section">
         <img

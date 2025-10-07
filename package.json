@@ -47,5 +47,10 @@
 	},
 	"keywords": [
 		"svelte"
-	]
+	],
+	"dependencies": {
+		"@beyonk/svelte-notifications": "^4.3.0",
+		"svelte-notifications": "^0.9.98",
+		"svelte-sonner": "^1.0.5"
+	}
 }
