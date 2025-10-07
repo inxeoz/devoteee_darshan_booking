@@ -21,26 +21,25 @@ export async function get_profile() {
 }
 
 export async function get_appointment_list(
-  limitStart: number,
-  pageLength: number,
+  limitStart: number | null,
+  pageLength: number | null,
+  darshan_type: string | null,
+  workflow_state: string | null,
 ) {
   try {
     const res = await fetch(COMMON + "get_appointment_list", {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      // body: JSON.stringify({
-      //   token: getCookieByName("auth_token"),
-      //   login_as: login_as,
-      // }),
+      body: JSON.stringify({
+        limitStart: limitStart,
+        pageLength: pageLength,
+        darshan_type: darshan_type,
+        workflow_state: workflow_state,
+      }),
     });
-
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
-    }
 
     const data = await res.json();
 
@@ -174,6 +173,25 @@ export async function registration_devoteee(phone: number) {
       body: JSON.stringify({
         phone: phone,
       }),
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    console.error(err);
+
+    return null;
+  }
+}
+
+export async function get_appointment_stats() {
+  try {
+    const res = await fetch(COMMON + "get_appointment_stats", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     const data = await res.json();

@@ -14,6 +14,8 @@
     <a href="/login" class="hover:underline">Login</a>
 
     <a href="/demo" class="hover:underline">Demo</a>
+
+    <a href="/devoteee" class="hover:underline">Dashboard</a>
 </nav>
 
 <!-- 🧩 Every page will render inside this slot -->
