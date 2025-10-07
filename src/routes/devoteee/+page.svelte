@@ -1,35 +1,39 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
-    import { get_profile } from "@src/helper_devoteee.js";
+    import { onMount } from "svelte";
     import { goto } from "$app/navigation";
-
-    const dispatch = createEventDispatcher();
+    import { Card, Button, Alert } from "flowbite-svelte";
+    import { get_profile } from "@src/helper_devoteee.js";
 
     const defaultActions = [
         {
             id: "viewBookings",
             label: "View Bookings",
-            site: "devoteee/mybooking",
+            site: "/devoteee/mybooking",
+            button_color: "blue",
         },
         {
             id: "bookShigra",
             label: "Book - Shigra Darshan",
-            site: "devoteee/shigra",
+            site: "/devoteee/shigra",
+            button_color: "dark",
         },
         {
             id: "bookVip",
             label: "Book - VIP Darshan",
-            site: "devoteee/vipdarshan",
+            site: "/devoteee/vipdarshan",
+            button_color: "blue",
         },
         {
             id: "bookLocalide",
             label: "Book - Localide Darshan",
-            site: "devoteee/localide",
+            site: "/devoteee/localide",
+            button_color: "dark",
         },
         {
             id: "bookBhasm",
             label: "Book - Bhasm Arti",
-            site: "bhasmarti",
+            site: "/devoteee/bhasmarti",
+            button_color: "dark",
         },
     ];
 
@@ -41,7 +45,6 @@
 
     let devoteee_details: ProfileDetails | null = null;
     let devoteee_name = "";
-
     export let title = "Dashboard";
     export let welcome = "Welcome back!";
     export let accentIndex = 2;
@@ -52,116 +55,63 @@
 
     onMount(async () => {
         const data = await get_profile();
-        if (data !== null) {
+        if (data) {
             devoteee_details = data.message;
             devoteee_name = data.message.devoteee_name || "";
-
-            console.log(data.message);
         }
     });
 
     function complete_kyc() {
         goto("/registration/complete_profile");
     }
+
+    function logout() {
+        goto("/registration/login");
+    }
 </script>
 
-<div class="page">
-    <div class="card">
-        <div class="main_details">
-            <h1 class="title">{title}</h1>
-            <p class="subtitle">
-                {welcome}
-                {#if devoteee_details?.devoteee_name}
-                    {devoteee_details?.devoteee_name}
-                {/if}
-            </p>
+<!-- 💠 Flowbite layout -->
+<div class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <Card class="w-full max-w-2xl text-center p-10">
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">{title}</h1>
+        <p class="text-gray-600 mb-4">
+            {welcome}
+            {#if devoteee_details?.devoteee_name}
+                <span class="font-medium bg-gray-500 ml-1">
+                    {devoteee_details.devoteee_name}
+                </span>
+            {/if}
+        </p>
 
-            {#if devoteee_details?.is_ekyc_complete == 0}
-                <button
-                    class="btn danger bg-orange-400"
+        {#if devoteee_details?.is_ekyc_complete == 0}
+            <Alert color="warning" class="mb-4" rounded>
+                <span class="font-medium">KYC Pending:</span>
+                Please complete your profile to continue.
+                <Button
+                    color="warning"
+                    size="sm"
+                    class="ml-2"
                     on:click={complete_kyc}
                 >
-                    complete your kyc
-                </button>
-            {/if}
-        </div>
+                    Complete KYC
+                </Button>
+            </Alert>
+        {/if}
 
-        <div class="stack">
+        <!-- 💡 Actions -->
+        <div class="grid gap-3 mt-4">
             {#each defaultActions as action, i}
-                <button
-                    class="btn {i === accentIndex ? 'alt' : 'primary'}"
+                <Button
+                    color={action.button_color}
                     on:click={() => onActionClicked(action.site)}
                 >
                     {action.label}
-                </button>
+                </Button>
             {/each}
         </div>
 
-        <button class="logout" on:click={() => goto("/registration/login")}>
-            Logout
-        </button>
-    </div>
+        <div class="mt-5">
+            <Button color="light" on:click={logout}>Logout</Button>
+        </div>
+    </Card>
 </div>
-
-<style>
-    .page {
-        min-height: 100vh;
-        background: #f4f6f8;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-    }
-    .card {
-        width: min(620px, 92vw);
-        background: #fff;
-        border-radius: 14px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        padding: 32px;
-        text-align: center;
-    }
-    .title {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
-    .subtitle,
-    .panel-help,
-    .logout {
-        color: #6b7280;
-        font-size: 14px;
-    }
-    .panel-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin: 8px 0;
-    }
-    .stack {
-        display: grid;
-        gap: 10px;
-        margin: 16px 0;
-    }
-    .btn {
-        height: 44px;
-        border: none;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        width: 100%;
-        color: #fff;
-    }
-    .btn.primary {
-        background: #2151ea;
-    }
-    .btn.alt {
-        background: #443de0;
-    }
-    .logout {
-        background: none;
-        border: none;
-        margin-top: 10px;
-        cursor: pointer;
-    }
-    .logout:hover {
-        text-decoration: underline;
-    }
-</style>
