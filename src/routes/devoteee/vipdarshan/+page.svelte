@@ -1,6 +1,13 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { create_appointment, get_profile } from "@src/helper_devoteee.js";
+    import { Card, Avatar, Badge, Button } from "flowbite-svelte";
+
+    import {
+        GiftBoxSolid,
+        ArrowUpRightFromSquareOutline,
+    } from "flowbite-svelte-icons";
+
     import { get_booking_slot_info } from "@src/helper.js";
 
     import { slotTimeTo24hr, slotTimeTo12hr } from "@src/utils.js";
@@ -9,10 +16,9 @@
     export let title = "Book VIP Darshan (Protocol)";
     export let subtitle = "Select your protocol category to proceed.";
     export let sectionTitle = "Book VIP Darshan";
-    export let primaryDevotee = "SASA";
 
     let profile_data: any = null;
-    let devoteee_name: string = "User";
+    let devoteee_name: string = "";
 
     export let protocols = [
         {
@@ -159,6 +165,24 @@
                 on:click={() => goto("/devoteee")}>← Devoteee Dashboard</button
             >
         </div>
+
+        {#if !(devoteee_name.length > 0)}
+            <div class="display-box">
+                <a href="/">
+                    <h1 class="mb-2 text-gray-500">
+                        Complete profile required !!!
+                    </h1>
+                </a>
+
+                <a
+                    href="/"
+                    class="text-primary-600 inline-flex items-center hover:underline"
+                >
+                    Complete Profile Dashboard
+                    <ArrowUpRightFromSquareOutline class="ms-2.5 h-4 w-4" />
+                </a>
+            </div>
+        {/if}
 
         {#if !bookingSuccess}
             <!-- Primary Devotee -->
