@@ -6,9 +6,9 @@
 
     const defaultActions = [
         {
-            id: "Complete Profile",
-            label: "Complete Profile",
-            site: "/devoteee/registration/complete_profile",
+            id: "My Profile",
+            label: "My Profile",
+            site: "/devoteee/profile/",
             button_color: "green",
         },
         {
