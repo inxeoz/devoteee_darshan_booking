@@ -1,6 +1,7 @@
 <script>
     import { goto } from "$app/navigation";
-    import { getCookieByName, update_profile } from "@src/helper.js";
+    import { getCookieByName } from "@src/helper.js";
+    import { update_profile } from "@src/helper_devoteee.js";
 
     // progress shown in the thin bar under the header
     export let progress = 80; // percent
