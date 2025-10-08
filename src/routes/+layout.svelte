@@ -2,7 +2,7 @@
     // Import global CSS once
     import "../app.css";
 
-    import { Breadcrumb, BreadcrumbItem, Navbar, NavHamburger, NavBrand , NavUl, NavLi} from "flowbite-svelte";
+    import { Breadcrumb, Button, Navbar, NavHamburger, NavBrand , NavUl, NavLi} from "flowbite-svelte";
 
 
     // Import Toaster once (global notifications)
@@ -11,20 +11,49 @@
 
 
 <Navbar>
-    <NavUl>
-        <NavLi href="/">Home</NavLi>
-        <NavLi href="/registration">registration</NavLi>
-        <NavLi href="/login">login</NavLi>
-        <NavLi href="/dashboard">Dashboard</NavLi>
-        <NavLi href="/dashboard/profile">profile</NavLi>
-    </NavUl>
-    <NavHamburger />
 
-    <NavBrand href="/">
-        <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Darshan Mahakaal</span>
+    <NavBrand href="/" aria-label="Homepage">
+    <span class="self-center text-2xl font-bold whitespace-nowrap dark:text-white">
+      Darshan Mahakaal
+    </span>
     </NavBrand>
 
+    <NavUl role="navigation" aria-label="Main navigation">
+        <NavLi href="/">Home</NavLi>
+        <NavLi href="/registration">Registration</NavLi>
+        <NavLi href="/login">Login</NavLi>
+        <NavLi href="/dashboard">Dashboard</NavLi>
+        <NavLi href="/dashboard/profile">Profile</NavLi>
+    </NavUl>
+
+    <NavHamburger aria-label="Toggle menu" />
+
+    <div>
+        <Button
+                outline
+                color="transparent"
+                class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
+                onclick={() => window.history.back()}
+                aria-label="Go back"
+        >
+            Back
+        </Button>
+
+        <Button
+                outline
+                color="transparent"
+                class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
+                onclick={() => window.history.forward()}
+                aria-label="Go forward"
+        >
+            Next
+        </Button>
+    </div>
+
+
+
 </Navbar>
+
 
 <!-- 🧩 Every page will render inside this slot -->
 <slot />
