@@ -1,7 +1,8 @@
-<script>
+<script lang="ts">
     import { goto } from "$app/navigation";
     import { getCookieByName } from "@src/helper.js";
-    import { update_profile } from "@src/helper_devoteee.js";
+    import { get_profile, update_profile } from "@src/helper_devoteee.js";
+    import { onMount } from "svelte";
 
     // progress shown in the thin bar under the header
     export let progress = 80; // percent
@@ -9,6 +10,8 @@
     // API defaults (override by passing props)
     export let apiUrl =
         "http://localhost:1880/create_or_update_devoteee_profile";
+
+    let profle_data: any = null;
 
     // form model
     let name = "";
@@ -61,15 +64,29 @@
         submitted = true;
     }
 
-    function goBack() {
-        // If you previously relied on a parent to handle "back", but you're no longer dispatching,
-        // use browser history fallback here. If you prefer a specific route, call goto('/somewhere').
-        history.length > 1 ? history.back() : goto("/dashboard");
+    function goToMyBookings() {
+        goto("/devoteee/mybooking");
     }
 
-    function goToMyBookings() {
-        goto("/dashboard/mybooking");
-    }
+    onMount(async () => {
+        try {
+            const response = await get_profile();
+            // defensive: check structure
+            profle_data = response?.message?.profile ?? null;
+
+            name = profle_data.devoteee_name;
+            gender = profle_data.gender;
+
+            dob = profle_data.dob;
+            address = profle_data.address;
+            aadhar = profle_data.aadhar;
+        } catch (e) {
+            profle_data = "Failed to load profile";
+            console.error(e);
+        } finally {
+            loading = false;
+        }
+    });
 </script>
 
 <div class="page">
@@ -91,7 +108,7 @@
                     </p>
                 {/if}
 
-                <button class="btn primary" on:click={() => goto("/dashboard")}>
+                <button class="btn primary" on:click={() => goto("/devoteee")}>
                     Dashboard
                 </button>
 
@@ -104,7 +121,7 @@
                 </button>
             </div>
         {:else}
-            <h2 class="heading">Complete Your Profile</h2>
+            <h2 class="heading">Update Your Profile</h2>
             <p class="copy">
                 Please provide a few more details to finish your registration.
             </p>
@@ -207,13 +224,15 @@
             </form>
         {/if}
 
-        <button class="back" type="button" on:click={goBack}>← Back</button>
+        <button
+            class="back"
+            type="button"
+            on:click={() => window.history.back()}>← Back</button
+        >
 
         <p class="footnote">
             Already registered?
-            <a href="/registration/login" class="link"
-                >Login with Mobile Number</a
-            >
+            <a href="/login" class="link">Login with Mobile Number</a>
         </p>
     </div>
 </div>
