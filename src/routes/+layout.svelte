@@ -10,10 +10,10 @@
 </script>
 
 
-<Navbar>
+<Navbar  class="bg-sky-100 dark:bg-primary-700">
 
     <NavBrand href="/" aria-label="Homepage">
-    <span class="self-center text-2xl font-bold whitespace-nowrap dark:text-white">
+    <span class="self-center font-bold whitespace-nowrap dark:text-white">
       Darshan Mahakaal
     </span>
     </NavBrand>
@@ -27,6 +27,7 @@
     </NavUl>
 
     <NavHamburger aria-label="Toggle menu" />
+
 
     <div>
         <Button
