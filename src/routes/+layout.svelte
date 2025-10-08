@@ -32,6 +32,7 @@
     <div>
         <Button
                 outline
+                pill
                 color="transparent"
                 class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
                 onclick={() => window.history.back()}
@@ -42,6 +43,7 @@
 
         <Button
                 outline
+                pill
                 color="transparent"
                 class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
                 onclick={() => window.history.forward()}
