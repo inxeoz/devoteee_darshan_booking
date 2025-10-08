@@ -2,21 +2,29 @@
     // Import global CSS once
     import "../app.css";
 
+    import { Breadcrumb, BreadcrumbItem, Navbar, NavHamburger, NavBrand , NavUl, NavLi} from "flowbite-svelte";
+
+
     // Import Toaster once (global notifications)
     import { Toaster } from "svelte-sonner";
 </script>
 
-<!-- 🌐 Global navigation bar -->
-<nav class="bg-blue-500 text-white flex flex-wrap gap-x-4 px-4 py-3">
-    <a href="/" class="hover:underline">Home</a>
 
-    <a href="/registration" class="hover:underline">Registration</a>
-    <a href="/login" class="hover:underline">Login</a>
+<Navbar>
+    <NavUl>
+        <NavLi href="/">Home</NavLi>
+        <NavLi href="/registration">registration</NavLi>
+        <NavLi href="/login">login</NavLi>
+        <NavLi href="/dashboard">Dashboard</NavLi>
+        <NavLi href="/dashboard/profile">profile</NavLi>
+    </NavUl>
+    <NavHamburger />
 
-    <a href="/devoteee" class="hover:underline">Dashboard</a>
+    <NavBrand href="/">
+        <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Darshan Mahakaal</span>
+    </NavBrand>
 
-    <a href="/src/routes/dashboard/profile" class="hover:underline">profile</a>
-</nav>
+</Navbar>
 
 <!-- 🧩 Every page will render inside this slot -->
 <slot />
