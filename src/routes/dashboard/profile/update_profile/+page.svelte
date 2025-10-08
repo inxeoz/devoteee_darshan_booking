@@ -199,17 +199,6 @@
                 </button>
             </form>
         {/if}
-
-        <button
-            class="back"
-            type="button"
-            on:click={() => window.history.back()}>← Back</button
-        >
-
-        <p class="footnote">
-            Already registered?
-            <a href="/login" class="link">Login with Mobile Number</a>
-        </p>
     </div>
 </div>
 
