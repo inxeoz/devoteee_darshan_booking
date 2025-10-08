@@ -26,8 +26,7 @@ export async function login_verify(phone: number, pwd: string) {
             },
             body: JSON.stringify({
                 usr: phone + "",
-                // pwd: pwd,
-                pwd: "A12345678Hz",
+                pwd: pwd,
             }),
         });
 

@@ -20,7 +20,7 @@
 
         if (json_data?.message) {
             toast.success("Login successful");
-            await goto("/dashboard");
+            await goto("/login");
 
         } else {
             // show API message or generic error

@@ -4,12 +4,12 @@
     import { Card, Button, Label, Input } from "flowbite-svelte";
     import { Badge } from "flowbite-svelte";
 
-    import { login_verify } from "@src/helper.js";
+    import { login_verify } from "@src/helper_devoteee.js";
     import { toast } from "svelte-sonner";
 
     // phone as string to allow leading + / 0 etc
     export let phone = 0;
-    let password: string =  "A12345678Hz";
+    let password: string =  "Mpsedc123";
     let loading: boolean = false;
 
     async function login(e: SubmitEvent) {
@@ -20,7 +20,7 @@
 
         if (json_data?.full_name) {
             toast.success("Login successful");
-            await goto("/devoteee");
+            await goto("/dashboard");
 
         } else {
             // show API message or generic error
