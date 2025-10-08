@@ -3,9 +3,6 @@
     import { get_profile, update_profile } from "@src/helper_devoteee.js";
     import { onMount } from "svelte";
 
-    // progress shown in the thin bar under the header
-    export let progress = 20; // percent
-
     let profle_data: any = null;
 
     // form model
@@ -65,9 +62,7 @@
 
     onMount(async () => {
         try {
-            const response = await get_profile();
-            // defensive: check structure
-            profle_data = response?.message?.profile ?? null;
+            profle_data = await get_profile();
 
             name = profle_data.devoteee_name;
             gender = profle_data.gender;
@@ -86,34 +81,20 @@
 
 <div class="page">
     <div class="card" role="region" aria-labelledby="title">
-        <div class="progress" aria-label="Progress">
-            <span
-                class="bar"
-                style="width: {Math.max(0, Math.min(100, progress))}%"
-            ></span>
-        </div>
 
-        {#if submitted}
+
+        {#if ! submitted}
             <div class="submitted">
                 <h3>Successfully updated profile details</h3>
-                {#if serverMessage}
-                    <p class="copy">
-                        {serverMessage}
-                        {#if serverCode}(<strong>{serverCode}</strong>){/if}
-                    </p>
-                {/if}
 
                 <button class="btn primary" on:click={() => goto("/dashboard")}>
                     Dashboard
                 </button>
 
-                <button
-                    class="btn"
-                    style="margin-top:8px;"
-                    on:click={goToMyBookings}
-                >
-                    See your appointments
+                <button class="btn primary" on:click={() => goto("/dashboard/mybooking")}>
+                    My Bookings
                 </button>
+
             </div>
         {:else}
             <h2 class="heading">Update Your Profile</h2>
