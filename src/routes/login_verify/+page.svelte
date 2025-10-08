@@ -11,7 +11,7 @@
     export let phone: string = "";
     export let user_type: string = "";
 
-    let temp_pwd: string = "";
+    let temp_pwd: string = "A12345678Hz";
     let loading: boolean = false;
     let message: string = ""; // success/info from API
     let error: string = ""; // error messages to show

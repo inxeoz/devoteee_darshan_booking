@@ -6,6 +6,12 @@
 
     const defaultActions = [
         {
+            id: "Complete Profile",
+            label: "Complete Profile",
+            site: "/devoteee/registration/complete_profile",
+            button_color: "green",
+        },
+        {
             id: "viewBookings",
             label: "View Bookings",
             site: "/devoteee/mybooking",
