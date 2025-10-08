@@ -15,6 +15,7 @@
 
     let devoteee_details: ProfileDetails | null = null;
     let devoteee_name = "";
+    let is_ekyc_complete = 0;
 
     const defaultActions = [
         { id: "myProfile", label: "My Profile", site: "/dashboard/profile/", button_color: "green" },
@@ -33,7 +34,9 @@
 
             if (devoteee_details) {
                 console.log(devoteee_details);
+                console.log(devoteee_details.is_ekyc_complete);
                 devoteee_name = devoteee_details.devoteee_name || "";
+                is_ekyc_complete = devoteee_details.is_ekyc_complete || 0;
             }
         } catch (error) {
             console.error("Failed to load profile:", error);
@@ -59,17 +62,20 @@
         <p class="text-gray-600 mb-4">
             {welcome}
             {#if devoteee_name}
-                <Badge color="blue">{devoteee_name}</Badge>
+               {devoteee_name}
             {/if}
         </p>
 
-        {#if devoteee_details?.is_ekyc_complete === 0}
-            <Alert color="warning" rounded class="mb-4">
-                <span class="font-medium">KYC Pending:</span> Please complete your profile to continue.
-                <Button color="warning" size="sm" class="ml-2" onclick={completeKYC}>
-                    Complete KYC
-                </Button>
+        {#if is_ekyc_complete === 0}
+
+            <Alert color="red"  >
+                <span class="font-medium">Danger alert!</span>
+                Please complete your profile to continue.
+                <Badge color="gray"  outline size="sm" class="ml-2" onclick={()=>goto("/login")}>
+                   Complete the Profile
+                </Badge>
             </Alert>
+
         {/if}
 
         <div class="grid gap-3 mt-4">

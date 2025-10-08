@@ -12,9 +12,8 @@
 
     onMount(async () => {
         try {
-            const response = await get_profile();
-            // defensive: check structure
-            profile = response?.message?.profile ?? null;
+            profile= await get_profile();
+
         } catch (e) {
             error = "Failed to load profile";
             console.error(e);
