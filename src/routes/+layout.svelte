@@ -15,7 +15,7 @@
 
     <a href="/devoteee" class="hover:underline">Dashboard</a>
 
-    <a href="/devoteee/profile" class="hover:underline">profile</a>
+    <a href="/src/routes/dashboard/profile" class="hover:underline">profile</a>
 </nav>
 
 <!-- 🧩 Every page will render inside this slot -->

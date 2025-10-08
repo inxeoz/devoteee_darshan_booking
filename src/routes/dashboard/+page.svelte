@@ -8,7 +8,7 @@
         {
             id: "My Profile",
             label: "My Profile",
-            site: "/devoteee/profile/",
+            site: "/dashboard/profile/",
             button_color: "green",
         },
         {
@@ -20,7 +20,7 @@
         {
             id: "bookShigra",
             label: "Book - Shigra Darshan",
-            site: "/devoteee/shigra",
+            site: "/dashboard/shigra",
             button_color: "dark",
         },
         {
@@ -32,7 +32,7 @@
         {
             id: "bookLocalide",
             label: "Book - Localide Darshan",
-            site: "/devoteee/localide",
+            site: "/dashboard/localide",
             button_color: "dark",
         },
         {

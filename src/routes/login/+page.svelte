@@ -14,8 +14,6 @@
 
     async function login(e: SubmitEvent) {
         e?.preventDefault();
-
-
         loading = true;
 
         const json_data = await login_verify(phone, password);
@@ -74,7 +72,6 @@
                     {#if loading}Verifying...{:else}Login{/if}
                 </Button>
             </div>
-
         </form>
     </Card>
 </div>
