@@ -5,6 +5,7 @@
         get_vip_booking_slot_info,
     } from "@src/helper_devoteee.js";
 
+    import { slotTimeTo24hr, slotTimeTo12hr } from "@src/utils.js";
     // Props
     export let title = "Book VIP Darshan (Protocol)";
     export let subtitle = "Select your protocol category to proceed.";
@@ -30,7 +31,9 @@
     let companions: { name: string; phone: string; age: number }[] = [];
     let visitDate = "";
     let selectedSlotName = "";
-    let selectedSlottime = "";
+    let selected_slot_start_time = "";
+    let selected_slot_end_time = "";
+
     let authorityLetterFile: File | null = null;
     let saveAsDraft = true;
 
@@ -60,28 +63,15 @@
         companions = companions.filter((_, idx) => idx !== i);
     }
 
-    function slotTimeTo24hr(slotLabel: string) {
-        const [time, meridian] = slotLabel.split(" ");
-        if (!meridian) return time;
-        const [hStr, mStr] = time.split(":");
-        let h = parseInt(hStr, 10);
-        const m = mStr || "00";
-        if (meridian.toUpperCase() === "PM" && h !== 12) h += 12;
-        if (meridian.toUpperCase() === "AM" && h === 12) h = 0;
-        return `${h.toString().padStart(2, "0")}:${m}`;
-    }
-
     async function submitBooking() {
         // console.log("DTATE", visitDate);
         loading = true;
 
         const details = {
             darshan_date: visitDate,
-            darshan_time: selectedSlottime
-                ? slotTimeTo24hr(selectedSlottime)
-                : "",
-
             slot_name: selectedSlotName,
+            slot_start_time: selected_slot_start_time,
+            slot_end_time: selected_slot_end_time,
             darshan_with_protocol: 1,
             protocol_rank: selectedProtocolValue || "",
             government_authority_letter: authorityLetterFile
@@ -123,9 +113,22 @@
         console.log(slots_data);
     }
 
-    function select_slot(slot_name: string, slot_time: string) {
+    function select_slot(
+        slot_name: string,
+        slot_start_time: string,
+        slot_end_time: string,
+    ) {
         selectedSlotName = slot_name;
-        selectedSlottime = slot_time;
+        selected_slot_start_time = slot_start_time;
+        selected_slot_end_time = slot_end_time;
+
+        console.log(
+            selectedSlotName,
+            " ",
+            selected_slot_start_time,
+            " ",
+            selected_slot_end_time,
+        );
     }
 </script>
 
@@ -216,10 +219,17 @@
                     <button
                         class="slot-btn {slotClass(s)}"
                         on:click={() =>
-                            select_slot(s.slot_name, s.slot_start_time)}
+                            select_slot(
+                                s.slot_name,
+                                s.slot_start_time,
+                                s.slot_end_time,
+                            )}
                         disabled={s.seats === 0}
                     >
-                        <div class="slot-time">{s.slot_start_time}</div>
+                        <div class="slot-time">
+                            {slotTimeTo12hr(s.slot_start_time)} to
+                            {slotTimeTo12hr(s.slot_end_time)}
+                        </div>
                         <div class="slot-seats">{s.slot_capacity} Seats</div>
                     </button>
                 {/each}
