@@ -1,86 +1,80 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { goto } from "$app/navigation";
-    import { Toaster, toast } from "svelte-sonner";
-    import { login_request_approver } from "@src/helper_approver.js";
-    import { login_request_devoteee } from "@src/helper_devoteee.js";
-    import { login_request_attender } from "@src/helper_attender.js";
+    import { Card, Button, Label, Input } from "flowbite-svelte";
+    import { Badge } from "flowbite-svelte";
 
-    // import Flowbite components
-    import { Label, Input, Select, Button, Card } from "flowbite-svelte";
+    import { login_verify } from "@src/helper.js";
+    import { toast } from "svelte-sonner";
 
-    let user_type = "Devoteee";
-    let phone = "";
-    let loading = false;
-    let res;
+    // phone as string to allow leading + / 0 etc
+    export let phone = 0;
+    let password: string =  "A12345678Hz";
+    let loading: boolean = false;
 
-    const requestMap = {
-        Approver: login_request_approver,
-        Devoteee: login_request_devoteee,
-        Attender: login_request_attender,
-    };
-
-    async function requestLogin(e?: SubmitEvent) {
+    async function login(e: SubmitEvent) {
         e?.preventDefault();
+
+
         loading = true;
 
-        localStorage.setItem("Mphone", phone);
-        localStorage.setItem("Muser_type", user_type);
+        const json_data = await login_verify(phone, password);
 
-        const fn = requestMap[user_type];
-        res = await fn(phone);
+        if (json_data?.full_name) {
+            toast.success("Login successful");
+            await goto("/devoteee");
 
-        if (res?.message?.err) {
-            toast.error(res.message.err);
         } else {
-            toast.success("OTP sent successfully");
-            goto("/login_verify");
+            // show API message or generic error
+            toast.error(json_data || "Login failed");
+            loading = false;
         }
-
-        loading = false;
     }
+
 </script>
 
-<div class="min-h-screen bg-gray-50 flex items-center justify-center">
+<div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
     <Card class="w-full max-w-md p-10">
-        <h2 class="text-2xl font-bold text-center mb-4">Login Request</h2>
+        <form
+                class="space-y-4"
+                on:submit={login}
+                aria-busy={loading}
+        >
+            <h2 class="text-xl font-semibold text-gray-800 flex justify-center">
+                Login
+            </h2>
 
-        <form class="space-y-4" on:submit|preventDefault={requestLogin}>
+            <Badge color="indigo">Devoteee</Badge>
+
             <div>
                 <Label for="phone">Phone</Label>
                 <Input
-                    id="phone"
-                    type="tel"
-                    bind:value={phone}
-                    placeholder="000"
-                    required
+                        id="phone"
+                        type="text"
+                        bind:value={phone}
+                        placeholder="Phone"
+                        inputmode="tel"
+                        autocomplete="tel"
                 />
             </div>
 
             <div>
-                <Label for="user_type">User Type</Label>
-                <Select id="user_type" bind:value={user_type}>
-                    <option>Approver</option>
-                    <option>Devoteee</option>
-                    <option>Attender</option>
-                </Select>
+                <Label for="temp">Password</Label>
+                <Input
+                        id="temp"
+                        type="text"
+                        bind:value={password}
+                        placeholder="Enter password"
+                        disabled={loading}
+                />
             </div>
 
-            <Button
-                type="submit"
-                color="blue"
-                class="w-full"
-                disabled={loading}
-            >
-                {#if loading}
-                    Requesting...
-                {:else}
-                    Request Login
-                {/if}
-            </Button>
+            <div class="flex items-center justify-center">
+                <Button type="submit" disabled={loading} aria-disabled={loading} class="min-lg:w-7xl">
+                    {#if loading}Verifying...{:else}Login{/if}
+                </Button>
+            </div>
 
-            <Button outline color="blue" href="/login_verify"
-                >Verify login</Button
-            >
         </form>
     </Card>
 </div>
