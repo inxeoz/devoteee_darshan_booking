@@ -139,11 +139,7 @@
     }
 
     onMount(async () => {
-        const res = await get_profile();
-
-        if (res) {
-            profile_data = res.message.profile;
-        }
+        profile_data = await get_profile();
 
         console.log(profile_data.devoteee_name);
 
@@ -158,11 +154,6 @@
 
         <div class="header-row">
             <h2 class="section">{sectionTitle}</h2>
-            <button
-                class="link"
-                type="button"
-                on:click={() => goto("/dashboard")}>← Devoteee Dashboard</button
-            >
         </div>
 
         {#if !(devoteee_name.length > 0)}
