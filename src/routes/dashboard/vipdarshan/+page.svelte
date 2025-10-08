@@ -174,7 +174,7 @@
             </div>
         {/if}
 
-        {#if !bookingSuccess}
+        {#if bookingSuccess}
             <!-- Primary Devotee -->
             <label class="label">Primary Devotee</label>
             <div class="display-box">{devoteee_name}</div>
@@ -294,22 +294,20 @@
             </button>
         {:else}
             <div class="success-card">
-                <h2 class="section">Success</h2>
-                <p class="success">Appointment applied.</p>
-                {#if bookingId}<p class="muted small">
-                        Application ID: {bookingId}
-                    </p>{/if}
+
+                <Badge  color="green" class="success text-base">Appointment applied.</Badge>
+
                 <div
                     style="display:flex; gap:12px; margin-top:14px; justify-content:center;"
                 >
                     <button
                         class="btn success xl"
-                        on:click={() => goto("/devoteee/mybooking")}
+                        on:click={() => goto("/dashboard/mybooking")}
                         >See your bookings</button
                     >
                     <button
                         class="btn primary subtle xl"
-                        on:click={() => goto("/devoteee")}
+                        on:click={() => goto("/dashboard")}
                         >Back to Dashboard</button
                     >
                 </div>
@@ -340,8 +338,8 @@
 
     .title {
         margin: 0 0 6px;
-        font-size: 26px;
-        font-weight: 800;
+        font-size: 20px;
+        font-weight: 600;
         text-align: center;
         color: #1f2937;
     }
@@ -360,7 +358,7 @@
     .section {
         margin: 0;
         font-size: 18px;
-        font-weight: 800;
+        font-weight: 600;
         color: #111827;
     }
     .link {
