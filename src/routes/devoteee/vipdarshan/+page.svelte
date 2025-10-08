@@ -1,14 +1,18 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { create_appointment } from "@src/helper_devoteee.js";
+    import { create_appointment, get_profile } from "@src/helper_devoteee.js";
     import { get_booking_slot_info } from "@src/helper.js";
 
     import { slotTimeTo24hr, slotTimeTo12hr } from "@src/utils.js";
+    import { onMount } from "svelte";
     // Props
     export let title = "Book VIP Darshan (Protocol)";
     export let subtitle = "Select your protocol category to proceed.";
     export let sectionTitle = "Book VIP Darshan";
     export let primaryDevotee = "SASA";
+
+    let profile_data: any = null;
+    let devoteee_name: string = "User";
 
     export let protocols = [
         {
@@ -128,6 +132,18 @@
             selected_slot_end_time,
         );
     }
+
+    onMount(async () => {
+        const res = await get_profile();
+
+        if (res) {
+            profile_data = res.message.profile;
+        }
+
+        console.log(profile_data.devoteee_name);
+
+        devoteee_name = profile_data.devoteee_name;
+    });
 </script>
 
 <div class="page">
@@ -147,9 +163,7 @@
         {#if !bookingSuccess}
             <!-- Primary Devotee -->
             <label class="label">Primary Devotee</label>
-            <div class="display-box">
-                <div class="strong">{primaryDevotee}</div>
-            </div>
+            <div class="display-box">{devoteee_name}</div>
 
             <!-- Protocol -->
             <label class="label">Protocol</label>
