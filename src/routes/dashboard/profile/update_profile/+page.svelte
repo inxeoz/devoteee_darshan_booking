@@ -103,7 +103,7 @@
                     </p>
                 {/if}
 
-                <button class="btn primary" on:click={() => goto("/devoteee")}>
+                <button class="btn primary" on:click={() => goto("/dashboard")}>
                     Dashboard
                 </button>
 

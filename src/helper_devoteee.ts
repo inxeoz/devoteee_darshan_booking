@@ -74,7 +74,9 @@ export async function get_profile() {
     });
 
     const data = await res.json();
-    return data;
+
+    return data?.message?.profile
+
   } catch (err) {
     console.error("Error fetching profile details:", err);
 
