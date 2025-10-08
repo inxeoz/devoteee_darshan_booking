@@ -1,16 +1,20 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { Card, Avatar, Badge, Button, Tooltip } from "flowbite-svelte";
+    import { Card, Avatar, Badge, Button } from "flowbite-svelte";
     import { get_profile } from "@src/helper_devoteee.js";
+    import { goto } from "$app/navigation";
 
-    let profile = null;
-    let error = null;
+    let profile: any = null;
+    let error: string | null = null;
     let loading = true;
+
+    const truthyInt = (v: any) => Number(v) === 1;
 
     onMount(async () => {
         try {
             const response = await get_profile();
-            profile = response.message.profile;
+            // defensive: check structure
+            profile = response?.message?.profile ?? null;
         } catch (e) {
             error = "Failed to load profile";
             console.error(e);
@@ -18,10 +22,15 @@
             loading = false;
         }
     });
+
+    function updateProfile() {
+        // navigate to update page (keeps original behavior)
+        goto("/devoteee/profile/update_profile");
+    }
 </script>
 
 <div
-    class="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100"
+    class="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4"
 >
     {#if loading}
         <div class="animate-pulse text-gray-600 text-lg">
@@ -39,68 +48,98 @@
         >
             <div class="flex flex-col items-center space-y-4">
                 <Avatar
-                    src={`https://ui-avatars.com/api/?name=${profile.owner}&background=random`}
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(profile.devoteee_name ?? profile.owner ?? "User")}&background=random`}
                     alt="Avatar"
                     size="xl"
                     cornerStyle="rounded"
                 />
                 <div class="text-center">
                     <h2 class="text-2xl font-bold text-gray-800 mb-1">
-                        {profile.owner}
+                        {profile.devoteee_name ?? profile.owner ?? profile.name}
                     </h2>
-                    <p class="text-gray-500 text-sm">Darshan Devotee</p>
+                    <p class="text-gray-500 text-sm">
+                        {profile.doctype ?? "Darshan Devoteee Profile"}
+                    </p>
                 </div>
             </div>
 
             <div class="mt-6 space-y-3 text-gray-700">
                 <div class="flex justify-between border-b pb-2">
                     <span class="font-medium">Phone</span>
-                    <span>{profile.phone}</span>
+                    <span>{profile.phone ?? "—"}</span>
                 </div>
+
+                <div class="flex justify-between border-b pb-2">
+                    <span class="font-medium">Email</span>
+                    <span class="text-sm text-gray-600"
+                        >{profile.email ?? profile.frappe_profile ?? "—"}</span
+                    >
+                </div>
+
                 <div class="flex justify-between border-b pb-2">
                     <span class="font-medium">Gender</span>
-                    <span class="capitalize">{profile.gender}</span>
+                    <span class="capitalize">{profile.gender ?? "—"}</span>
                 </div>
+
+                <div class="flex justify-between border-b pb-2">
+                    <span class="font-medium">Date of Birth</span>
+                    <span>{profile.dob}</span>
+                </div>
+
                 <div class="flex justify-between border-b pb-2">
                     <span class="font-medium">E-KYC</span>
                     <Badge
-                        color={profile.is_ekyc_complete ? "success" : "warning"}
+                        color={truthyInt(profile.is_ekyc_complete)
+                            ? "success"
+                            : "warning"}
                     >
-                        {profile.is_ekyc_complete ? "Completed" : "Pending"}
+                        {truthyInt(profile.is_ekyc_complete)
+                            ? "Completed"
+                            : "Pending"}
                     </Badge>
                 </div>
+
                 <div class="flex justify-between border-b pb-2">
                     <span class="font-medium">Companion</span>
                     <Badge
-                        color={profile.is_devoteee_companion ? "info" : "gray"}
+                        color={truthyInt(profile.is_devoteee_companion)
+                            ? "info"
+                            : "gray"}
                     >
-                        {profile.is_devoteee_companion ? "Yes" : "No"}
+                        {truthyInt(profile.is_devoteee_companion)
+                            ? "Yes"
+                            : "No"}
                     </Badge>
                 </div>
+
                 <div class="flex justify-between border-b pb-2">
-                    <span class="font-medium">Created On</span>
-                    <span>{new Date(profile.creation).toLocaleString()}</span>
+                    <span class="font-medium">Aadhar</span>
+                    <span class="text-sm text-gray-600"
+                        >{profile.aadhar ?? "—"}</span
+                    >
                 </div>
+
+                <div class="flex justify-between border-b pb-2">
+                    <span class="font-medium">Address</span>
+                    <span class="text-sm text-gray-600"
+                        >{profile.address ?? "—"}</span
+                    >
+                </div>
+
                 <div class="flex justify-between">
-                    <span class="font-medium">DocType</span>
-                    <span class="text-sm text-gray-500">{profile.doctype}</span>
+                    <span class="font-medium">Created On</span>
+                    <span>{profile.creation}</span>
                 </div>
             </div>
 
             <div class="mt-8 flex justify-center space-x-4">
-                <Tooltip content="Edit your profile details" placement="top">
-                    <Button
-                        color="light"
-                        class="rounded-full px-5 py-2 font-medium">Edit</Button
-                    >
-                </Tooltip>
-                <Tooltip content="Proceed to Darshan Booking" placement="top">
-                    <Button
-                        color="blue"
-                        class="rounded-full px-5 py-2 font-medium"
-                        >Book Darshan</Button
-                    >
-                </Tooltip>
+                <Button
+                    color="light"
+                    class="rounded-full px-5 py-2 font-medium"
+                    onclick={() => updateProfile()}
+                >
+                    Update Profile
+                </Button>
             </div>
         </Card>
     {:else}
