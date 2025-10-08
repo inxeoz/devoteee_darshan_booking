@@ -1,9 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import {
-        create_appointment,
-        get_vip_booking_slot_info,
-    } from "@src/helper_devoteee.js";
+    import { create_appointment } from "@src/helper_devoteee.js";
+    import { get_booking_slot_info } from "@src/helper.js";
 
     import { slotTimeTo24hr, slotTimeTo12hr } from "@src/utils.js";
     // Props
@@ -107,7 +105,7 @@
     }
 
     async function fetch_slot_info(date: string) {
-        const data = await get_vip_booking_slot_info(date);
+        const data = await get_booking_slot_info(date);
         slots_data = data.message;
 
         console.log(slots_data);

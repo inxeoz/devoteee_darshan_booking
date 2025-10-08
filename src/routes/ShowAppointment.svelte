@@ -32,8 +32,6 @@
             const payload = await fetchAppointmentCall(appointmentId);
             data = payload?.message ?? payload;
             workflow_state = data.workflow_state;
-
-            console.log("SSS", workflow_state === "Pending");
         } catch (err: any) {
             error = err?.message ?? String(err);
         } finally {
@@ -185,17 +183,17 @@
                 <Button
                     color="primary"
                     pill
-                    onclick={() => {
+                    onclick={async () => {
                         rejectCall(appointmentId);
-                        fetchAppointment();
+                        await fetchAppointment();
                     }}>Reject</Button
                 >
                 <Button
                     color="green"
                     pill
-                    onclick={() => {
+                    onclick={async () => {
                         approveCall(appointmentId);
-                        fetchAppointment();
+                        await fetchAppointment();
                     }}>Approve</Button
                 >
             </div>
