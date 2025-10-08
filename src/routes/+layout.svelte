@@ -18,6 +18,7 @@
     <a href="/devoteee" class="hover:underline">Dashboard</a>
     <a href="/approver" class="hover:underline">Approver</a>
     <a href="/attender" class="hover:underline">attender</a>
+    <a href="/devoteee/profile" class="hover:underline">profile</a>
 </nav>
 
 <!-- 🧩 Every page will render inside this slot -->
