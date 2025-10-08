@@ -14,7 +14,7 @@
         {
             id: "viewBookings",
             label: "View Bookings",
-            site: "/devoteee/mybooking",
+            site: "/dashboard/mybooking",
             button_color: "blue",
         },
         {
@@ -26,7 +26,7 @@
         {
             id: "bookVip",
             label: "Book - VIP Darshan",
-            site: "/devoteee/vipdarshan",
+            site: "/dashboard/vipdarshan",
             button_color: "blue",
         },
         {
@@ -38,7 +38,7 @@
         {
             id: "bookBhasm",
             label: "Book - Bhasm Arti",
-            site: "/devoteee/bhasmarti",
+            site: "/dashboard/bhasmarti",
             button_color: "dark",
         },
     ];

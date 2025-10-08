@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { create_appointment, get_profile } from "@src/helper_devoteee.js";
+    import { create_appointment, get_profile , get_booking_slot_info} from "@src/helper_devoteee.js";
     import { Card, Avatar, Badge, Button } from "flowbite-svelte";
 
     import {
@@ -8,7 +8,6 @@
         ArrowUpRightFromSquareOutline,
     } from "flowbite-svelte-icons";
 
-    import { get_booking_slot_info } from "@src/helper.js";
 
     import { slotTimeTo24hr, slotTimeTo12hr } from "@src/utils.js";
     import { onMount } from "svelte";
@@ -162,7 +161,7 @@
             <button
                 class="link"
                 type="button"
-                on:click={() => goto("/devoteee")}>← Devoteee Dashboard</button
+                on:click={() => goto("/dashboard")}>← Devoteee Dashboard</button
             >
         </div>
 

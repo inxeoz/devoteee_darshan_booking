@@ -1,15 +1,10 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { getCookieByName } from "@src/helper.js";
     import { get_profile, update_profile } from "@src/helper_devoteee.js";
     import { onMount } from "svelte";
 
     // progress shown in the thin bar under the header
-    export let progress = 80; // percent
-
-    // API defaults (override by passing props)
-    export let apiUrl =
-        "http://localhost:1880/create_or_update_devoteee_profile";
+    export let progress = 20; // percent
 
     let profle_data: any = null;
 
@@ -65,7 +60,7 @@
     }
 
     function goToMyBookings() {
-        goto("/devoteee/mybooking");
+        goto("/dashboard/mybooking");
     }
 
     onMount(async () => {
@@ -251,7 +246,7 @@
     }
     .card {
         width: min(640px, 92vw);
-        background: #fff;
+        background: #ecf3f2;
         border-radius: 14px;
         box-shadow: 0 10px 28px rgba(16, 24, 40, 0.12);
         padding: 36px 40px 32px;
