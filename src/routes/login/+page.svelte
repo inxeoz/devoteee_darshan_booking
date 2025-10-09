@@ -6,7 +6,7 @@
 
     import { user_logged_in } from "@src/store.js";
 
-    import { login_verify } from "@src/helper_devoteee.js";
+    import { login_verify } from "@src/helper.js";
     import { toast } from "svelte-sonner";
 
     // phone as string to allow leading + / 0 etc

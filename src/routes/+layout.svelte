@@ -19,7 +19,7 @@
     // Import Toaster once (global notifications)
     import { Toaster } from "svelte-sonner";
     import { onMount } from "svelte";
-    import { get_logged_user } from "@src/helper_devoteee.js";
+    import { get_logged_user } from "@src/helper.js";
 
     onMount(async () => {
         await get_logged_user();
