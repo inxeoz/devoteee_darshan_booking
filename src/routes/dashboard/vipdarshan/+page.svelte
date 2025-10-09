@@ -1,13 +1,16 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { create_appointment, get_profile , get_booking_slot_info} from "@src/helper_devoteee.js";
+    import {
+        create_appointment,
+        get_profile,
+        get_booking_slot_info,
+    } from "@src/helper_devoteee.js";
     import { Card, Avatar, Badge, Button } from "flowbite-svelte";
 
     import {
         GiftBoxSolid,
         ArrowUpRightFromSquareOutline,
     } from "flowbite-svelte-icons";
-
 
     import { slotTimeTo24hr, slotTimeTo12hr } from "@src/utils.js";
     import { onMount } from "svelte";
@@ -174,7 +177,7 @@
             </div>
         {/if}
 
-        {#if bookingSuccess}
+        {#if !bookingSuccess}
             <!-- Primary Devotee -->
             <label class="label">Primary Devotee</label>
             <div class="display-box">{devoteee_name}</div>
@@ -294,8 +297,9 @@
             </button>
         {:else}
             <div class="success-card">
-
-                <Badge  color="green" class="success text-base">Appointment applied.</Badge>
+                <Badge color="green" class="success text-base"
+                    >Appointment applied.</Badge
+                >
 
                 <div
                     style="display:flex; gap:12px; margin-top:14px; justify-content:center;"
