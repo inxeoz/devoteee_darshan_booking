@@ -3,7 +3,7 @@
     import { goto } from "$app/navigation";
     import { Card, Button, Alert, Badge } from "flowbite-svelte";
 
-    import { get_profile } from "@src/helper_devoteee.js";
+    import { get_self_profile } from "@src/helper_devoteee.js";
 
     interface ProfileDetails {
         devoteee_name?: string;
@@ -61,7 +61,7 @@
 
     onMount(async () => {
         try {
-            const devoteee_details = await get_profile();
+            const devoteee_details = await get_self_profile();
 
             if (devoteee_details) {
                 show_dashboard = true;
@@ -77,14 +77,6 @@
 
     function onActionClicked(site?: string) {
         if (site) goto(site);
-    }
-
-    function completeKYC() {
-        goto("/registration/complete_profile");
-    }
-
-    function logout() {
-        goto("/registration/login");
     }
 </script>
 
@@ -106,8 +98,9 @@
                         color="gray"
                         outline
                         size="sm"
-                        class="ml-2"
-                        onclick={() => goto("/login")}
+                        class="ml-2 cursor-pointer"
+                        onclick={() =>
+                            goto("/dashboard/profile/update_profile")}
                     >
                         Complete the Profile
                     </Badge>
@@ -127,7 +120,9 @@
             </div>
 
             <div class="mt-5">
-                <Button color="light" on:click={logout} pill>Logout</Button>
+                <Button color="light" pill onclick={() => goto("/login")}
+                    >Logout</Button
+                >
             </div>
         </Card>
     {:else}
