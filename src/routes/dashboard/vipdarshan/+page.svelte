@@ -278,12 +278,6 @@
                 </div>
             {/if}
 
-            <!-- Draft -->
-            <div class="draft-row">
-                <input id="draft" type="checkbox" bind:checked={saveAsDraft} />
-                <label for="draft" class="muted">Save as Draft</label>
-            </div>
-
             <!-- Totals -->
             <div class="muted small">Fee: {feePerPerson} | Total: {total}</div>
 
