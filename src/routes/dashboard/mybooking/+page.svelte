@@ -67,7 +67,6 @@
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold text-slate-700">{sectionTitle}</h2>
             <div class="flex items-center gap-3">
-
                 <Button
                     color="light"
                     onclick={FetchBookings}

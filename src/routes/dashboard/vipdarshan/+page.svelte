@@ -2,7 +2,7 @@
     import { goto } from "$app/navigation";
     import {
         create_appointment,
-        get_profile,
+        get_self_profile,
         get_booking_slot_info,
     } from "@src/helper_devoteee.js";
     import { Card, Avatar, Badge, Button } from "flowbite-svelte";
@@ -142,7 +142,7 @@
     }
 
     onMount(async () => {
-        profile_data = await get_profile();
+        profile_data = await get_self_profile();
 
         console.log(profile_data.devoteee_name);
 

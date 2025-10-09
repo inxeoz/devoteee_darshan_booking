@@ -3,7 +3,7 @@
     import { goto } from "$app/navigation";
     import { Card, Button, Alert, Badge } from "flowbite-svelte";
 
-    import { get_profile } from "@src/helper_devoteee.js";
+    import { get_self_profile } from "@src/helper_devoteee.js";
 
     interface ProfileDetails {
         devoteee_name?: string;
@@ -61,7 +61,7 @@
 
     onMount(async () => {
         try {
-            const devoteee_details = await get_profile();
+            const devoteee_details = await get_self_profile();
 
             if (devoteee_details) {
                 show_dashboard = true;
