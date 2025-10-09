@@ -6,55 +6,6 @@ const VIP_BOOKING =
 
 import { user_logged_in } from "@src/store.js";
 
-export async function get_logged_user() {
-  try {
-    const res = await fetch("api/method/frappe.auth.get_logged_user", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const data = await res.json();
-
-    if (data?.message) {
-      user_logged_in.set(true);
-    } else {
-      user_logged_in.set(false);
-    }
-
-    return data;
-  } catch (err: any) {
-    console.error(err);
-
-    return null;
-  }
-}
-
-export async function login_verify(phone: number, pwd: string) {
-  try {
-    const res = await fetch("/api/method/login", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        usr: phone + "",
-        pwd: pwd,
-      }),
-    });
-
-    const data = await res.json();
-    return data;
-  } catch (err: any) {
-    console.error(err);
-
-    return null;
-  }
-}
-
 export async function get_booking_slot_info(slot_date: string) {
   try {
     const res = await fetch(VIP_BOOKING + "get_slot_occupancy_info", {
@@ -204,29 +155,6 @@ export async function login_request_devoteee(phone: number) {
       },
       body: JSON.stringify({
         phone: phone,
-      }),
-    });
-
-    const data = await res.json();
-    return data;
-  } catch (err: any) {
-    console.error(err);
-
-    return null;
-  }
-}
-
-export async function login_devoteee(phone: number, pwd: string) {
-  try {
-    const res = await fetch("/api/method/login", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        usr: phone + "",
-        pwd: pwd,
       }),
     });
 
