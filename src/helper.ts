@@ -26,13 +26,7 @@ export async function get_logged_user() {
   }
 }
 
-export function deleteAllCookies(phone: number, pwd: string) {
-  document.cookie.split(";").forEach((cookie) => {
-    const cookieName = cookie.split("=")[0].trim();
-    document.cookie =
-      cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;";
-  });
-}
+export function deleteAllCookies() {}
 
 export async function login_verify(phone: number, pwd: string) {
   try {

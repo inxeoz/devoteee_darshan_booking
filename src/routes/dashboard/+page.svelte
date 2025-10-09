@@ -4,6 +4,7 @@
     import { Card, Button, Alert, Badge } from "flowbite-svelte";
 
     import { get_self_profile } from "@src/helper_devoteee.js";
+    import { deleteAllCookies } from "@src/helper.js";
 
     interface ProfileDetails {
         devoteee_name?: string;
@@ -117,12 +118,6 @@
                         {action.label}
                     </Button>
                 {/each}
-            </div>
-
-            <div class="mt-5">
-                <Button color="light" pill onclick={() => goto("/login")}
-                    >Logout</Button
-                >
             </div>
         </Card>
     {:else}
