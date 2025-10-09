@@ -42,11 +42,7 @@
 </div>
 
 <div class="centered-content" aria-label="Warm Welcome">
-    <div class="centered-text">महाकाल दर्शन</div>
-    <div class="button-group">
-        <button type="button">Register</button>
-        <button type="button">Login</button>
-    </div>
+    <div class="centered-text">Loading</div>
 </div>
 
 <style>
@@ -80,31 +76,5 @@
         font-size: 4rem;
         pointer-events: none;
         margin-bottom: 2rem;
-    }
-
-    .button-group {
-        pointer-events: auto; /* allow interaction */
-        display: flex;
-        gap: 1.5rem;
-        justify-content: center;
-    }
-
-    button {
-        font-family: "Georgia", serif;
-        font-size: 1.5rem;
-        padding: 0.75rem 2rem;
-        border: 2px solid #7a5c2e;
-        background-color: transparent;
-        color: #7a5c2e;
-        cursor: pointer;
-        border-radius: 8px;
-        transition:
-            background-color 0.3s ease,
-            color 0.3s ease;
-    }
-
-    button:hover {
-        background-color: #7a5c2e;
-        color: #edf6f9;
     }
 </style>

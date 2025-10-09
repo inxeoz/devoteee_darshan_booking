@@ -4,16 +4,32 @@ const COMMON =
 const VIP_BOOKING =
   "/api/method/mahakaal.darshan_booking.doctype.booking_slot.booking_slot.";
 
-export function getCookieByName(name: string): string | null {
-  const nameEQ = name + "=";
-  const cookies = document.cookie.split(";");
-  for (let cookie of cookies) {
-    cookie = cookie.trim();
-    if (cookie.indexOf(nameEQ) === 0) {
-      return cookie.substring(nameEQ.length);
+import { user_logged_in } from "@src/store.js";
+
+export async function get_logged_user() {
+  try {
+    const res = await fetch("api/method/frappe.auth.get_logged_user", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+
+    if (data?.message) {
+      user_logged_in.set(true);
+    } else {
+      user_logged_in.set(false);
     }
+
+    return data;
+  } catch (err: any) {
+    console.error(err);
+
+    return null;
   }
-  return null;
 }
 
 export async function login_verify(phone: number, pwd: string) {

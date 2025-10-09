@@ -1,65 +1,88 @@
 <script>
     // Import global CSS once
     import "../app.css";
+    import { user_logged_in } from "@src/store.js";
+    import LoadingPage from "./LoadingPage.svelte";
 
-    import { Breadcrumb, Button, Navbar, NavHamburger, NavBrand , NavUl, NavLi} from "flowbite-svelte";
+    let loading = true;
 
+    import {
+        Breadcrumb,
+        Button,
+        Navbar,
+        NavHamburger,
+        NavBrand,
+        NavUl,
+        NavLi,
+    } from "flowbite-svelte";
 
     // Import Toaster once (global notifications)
     import { Toaster } from "svelte-sonner";
+    import { onMount } from "svelte";
+    import { get_logged_user } from "@src/helper_devoteee.js";
+
+    onMount(async () => {
+        await get_logged_user();
+        loading = false;
+    });
 </script>
 
+{#if loading}
+    <LoadingPage />
+{:else}
+    <Navbar class="bg-sky-100 dark:bg-primary-700">
+        <NavBrand href="/" aria-label="Homepage">
+            <span
+                class="self-center font-bold whitespace-nowrap dark:text-white"
+            >
+                Darshan Mahakaal
+            </span>
+        </NavBrand>
 
-<Navbar  class="bg-sky-100 dark:bg-primary-700">
+        <NavUl role="navigation" aria-label="Main navigation">
+            <NavLi href="/">Home</NavLi>
 
-    <NavBrand href="/" aria-label="Homepage">
-    <span class="self-center font-bold whitespace-nowrap dark:text-white">
-      Darshan Mahakaal
-    </span>
-    </NavBrand>
+            {#if $user_logged_in}
+                <NavLi href="/dashboard">Dashboard</NavLi>
+                <NavLi href="/dashboard/profile">Profile</NavLi>
+            {:else}
+                <NavLi href="/registration">Registration</NavLi>
+                <NavLi href="/login">Login</NavLi>
+            {/if}
+        </NavUl>
 
-    <NavUl role="navigation" aria-label="Main navigation">
-        <NavLi href="/">Home</NavLi>
-        <NavLi href="/registration">Registration</NavLi>
-        <NavLi href="/login">Login</NavLi>
-        <NavLi href="/dashboard">Dashboard</NavLi>
-        <NavLi href="/dashboard/profile">Profile</NavLi>
-    </NavUl>
+        <NavHamburger aria-label="Toggle menu" />
 
-    <NavHamburger aria-label="Toggle menu" />
+        <div>
+            {#if $user_logged_in}
+                <Button
+                    outline
+                    pill
+                    color="transparent"
+                    class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
+                    onclick={() => window.history.back()}
+                    aria-label="Go back"
+                >
+                    Back
+                </Button>
 
+                <Button
+                    outline
+                    pill
+                    color="transparent"
+                    class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
+                    onclick={() => window.history.forward()}
+                    aria-label="Go forward"
+                >
+                    Next
+                </Button>
+            {/if}
+        </div>
+    </Navbar>
 
-    <div>
-        <Button
-                outline
-                pill
-                color="transparent"
-                class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
-                onclick={() => window.history.back()}
-                aria-label="Go back"
-        >
-            Back
-        </Button>
+    <!-- 🧩 Every page will render inside this slot -->
+    <slot />
 
-        <Button
-                outline
-                pill
-                color="transparent"
-                class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
-                onclick={() => window.history.forward()}
-                aria-label="Go forward"
-        >
-            Next
-        </Button>
-    </div>
-
-
-
-</Navbar>
-
-
-<!-- 🧩 Every page will render inside this slot -->
-<slot />
-
-<!-- 🔔 Global toast notification container -->
-<Toaster position="top-right" richColors closeButton />
+    <!-- 🔔 Global toast notification container -->
+    <Toaster position="top-right" richColors closeButton />
+{/if}
