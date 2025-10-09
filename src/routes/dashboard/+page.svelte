@@ -78,14 +78,6 @@
     function onActionClicked(site?: string) {
         if (site) goto(site);
     }
-
-    function completeKYC() {
-        goto("/registration/complete_profile");
-    }
-
-    function logout() {
-        goto("/registration/login");
-    }
 </script>
 
 <div class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -106,8 +98,9 @@
                         color="gray"
                         outline
                         size="sm"
-                        class="ml-2"
-                        onclick={() => goto("/login")}
+                        class="ml-2 cursor-pointer"
+                        onclick={() =>
+                            goto("/dashboard/profile/update_profile")}
                     >
                         Complete the Profile
                     </Badge>
@@ -127,7 +120,9 @@
             </div>
 
             <div class="mt-5">
-                <Button color="light" on:click={logout} pill>Logout</Button>
+                <Button color="light" pill onclick={() => goto("/login")}
+                    >Logout</Button
+                >
             </div>
         </Card>
     {:else}
