@@ -18,11 +18,11 @@
         const json_data = await registration_devoteee(phone);
 
         if (json_data?.message) {
-            toast.success("Login successful");
+            toast.success("Registration Success");
             await goto("/login");
         } else {
             // show API message or generic error
-            toast.error(json_data || "Login failed");
+            toast.error(json_data || "Registration failed");
             loading = false;
         }
     }
