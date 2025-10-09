@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { create_appointment, get_profile } from "@src/helper_devoteee.js";
+    import { create_appointment, get_profile , get_booking_slot_info} from "@src/helper_devoteee.js";
     import { Card, Avatar, Badge, Button } from "flowbite-svelte";
 
     import {
@@ -8,7 +8,6 @@
         ArrowUpRightFromSquareOutline,
     } from "flowbite-svelte-icons";
 
-    import { get_booking_slot_info } from "@src/helper.js";
 
     import { slotTimeTo24hr, slotTimeTo12hr } from "@src/utils.js";
     import { onMount } from "svelte";
@@ -140,11 +139,7 @@
     }
 
     onMount(async () => {
-        const res = await get_profile();
-
-        if (res) {
-            profile_data = res.message.profile;
-        }
+        profile_data = await get_profile();
 
         console.log(profile_data.devoteee_name);
 
@@ -159,11 +154,6 @@
 
         <div class="header-row">
             <h2 class="section">{sectionTitle}</h2>
-            <button
-                class="link"
-                type="button"
-                on:click={() => goto("/devoteee")}>← Devoteee Dashboard</button
-            >
         </div>
 
         {#if !(devoteee_name.length > 0)}
@@ -184,7 +174,7 @@
             </div>
         {/if}
 
-        {#if !bookingSuccess}
+        {#if bookingSuccess}
             <!-- Primary Devotee -->
             <label class="label">Primary Devotee</label>
             <div class="display-box">{devoteee_name}</div>
@@ -304,22 +294,20 @@
             </button>
         {:else}
             <div class="success-card">
-                <h2 class="section">Success</h2>
-                <p class="success">Appointment applied.</p>
-                {#if bookingId}<p class="muted small">
-                        Application ID: {bookingId}
-                    </p>{/if}
+
+                <Badge  color="green" class="success text-base">Appointment applied.</Badge>
+
                 <div
                     style="display:flex; gap:12px; margin-top:14px; justify-content:center;"
                 >
                     <button
                         class="btn success xl"
-                        on:click={() => goto("/devoteee/mybooking")}
+                        on:click={() => goto("/dashboard/mybooking")}
                         >See your bookings</button
                     >
                     <button
                         class="btn primary subtle xl"
-                        on:click={() => goto("/devoteee")}
+                        on:click={() => goto("/dashboard")}
                         >Back to Dashboard</button
                     >
                 </div>
@@ -350,8 +338,8 @@
 
     .title {
         margin: 0 0 6px;
-        font-size: 26px;
-        font-weight: 800;
+        font-size: 20px;
+        font-weight: 600;
         text-align: center;
         color: #1f2937;
     }
@@ -370,7 +358,7 @@
     .section {
         margin: 0;
         font-size: 18px;
-        font-weight: 800;
+        font-weight: 600;
         color: #111827;
     }
     .link {
