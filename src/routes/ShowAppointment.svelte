@@ -185,13 +185,29 @@
         </div>
 
         <div>
-            <Button
-                color="light"
-                size="sm"
-                onclick={() => (showRaw = !showRaw)}
-            >
-                {showRaw ? "Hide JSON" : "Show raw JSON"}
-            </Button>
+            <div>
+                <Button
+                    color="light"
+                    size="sm"
+                    onclick={() => (showRaw = !showRaw)}
+                >
+                    {showRaw ? "Hide JSON" : "Show raw JSON"}
+                </Button>
+
+                <Button
+                    color="light"
+                    size="sm"
+                    onclick={() => {
+                        navigator.clipboard
+                            .writeText(safeStringify(data, 2))
+                            .then(() => alert("JSON copied to clipboard!"))
+                            .catch(() => alert("Failed to copy JSON"));
+                    }}
+                >
+                    Copy JSON
+                </Button>
+            </div>
+
             {#if showRaw}
                 <pre
                     class="bg-gray-900 text-gray-100 mt-2 p-2 rounded overflow-auto max-h-60 text-sm">
