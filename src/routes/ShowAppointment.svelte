@@ -84,6 +84,20 @@
             space,
         );
     }
+
+    // return {
+    //     "appointment_id" : appointment_id,
+    //     "devoteee_name" : devoteee_doc.devoteee_name,
+    //     "appointment_type" : appointment.darshan_type,
+    //     "slot_start_time" : appointment.slot_start_time,
+    //     "slot_end_time" : appointment.slot_end_time,
+    //     "workflow_state" : appointment.workflow_state,
+    //     "appointment_date" : appointment.darshan_date,
+    //     "with_protocol" : appointment.darshan_with_protocol,
+    //     "protocol_rank" : appointment.protocol_rank,
+    //     "devoteee_profile_id" : devoteee_profile_id,
+    //     "companions" : appointment.darshan_companion
+    // }
 </script>
 
 <Modal bind:open title="Appointment Details" size="lg" onclose={handleClose}>
@@ -110,10 +124,10 @@
                     {data.workflow_state ?? data.status ?? "—"}
                 </Badge>
             </div>
-            <div><strong>Type:</strong> {data.darshan_type ?? "—"}</div>
+            <div><strong>Type:</strong> {data.appointment_type ?? "—"}</div>
             <div>
                 <strong>Date:</strong>
-                {data.darshan_date}
+                {data.appointment_date}
             </div>
 
             <div>
@@ -143,9 +157,9 @@
 
         <div class="mb-3">
             <h3 class="font-semibold mb-1">Companions</h3>
-            {#if Array.isArray(data.darshan_companion) && data.darshan_companion.length > 0}
+            {#if Array.isArray(data.companions) && data.companions.length > 0}
                 <ul class="divide-y divide-gray-200 border rounded-md">
-                    {#each data.darshan_companion as c}
+                    {#each data.companions as c}
                         <li class="flex justify-between items-center p-2">
                             <div>
                                 <div class="font-semibold text-gray-800">
@@ -172,7 +186,7 @@
             <Button
                 color="light"
                 size="sm"
-                on:click={() => (showRaw = !showRaw)}
+                onclick={() => (showRaw = !showRaw)}
             >
                 {showRaw ? "Hide JSON" : "Show raw JSON"}
             </Button>
