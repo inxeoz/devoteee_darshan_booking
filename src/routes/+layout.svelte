@@ -19,7 +19,7 @@
     // Import Toaster once (global notifications)
     import { Toaster } from "svelte-sonner";
     import { onMount } from "svelte";
-    import { get_logged_user } from "@src/helper.js";
+    import { get_logged_user, logout } from "@src/helper.js";
 
     onMount(async () => {
         await get_logged_user();
@@ -37,6 +37,32 @@
             >
                 Darshan Mahakaal
             </span>
+
+            <div>
+                {#if $user_logged_in}
+                    <Button
+                        outline
+                        pill
+                        color="transparent"
+                        class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
+                        onclick={() => window.history.back()}
+                        aria-label="Go back"
+                    >
+                        Back
+                    </Button>
+
+                    <Button
+                        outline
+                        pill
+                        color="transparent"
+                        class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
+                        onclick={() => window.history.forward()}
+                        aria-label="Go forward"
+                    >
+                        Next
+                    </Button>
+                {/if}
+            </div>
         </NavBrand>
 
         <NavUl role="navigation" aria-label="Main navigation">
@@ -52,29 +78,10 @@
         </NavUl>
 
         <NavHamburger aria-label="Toggle menu" />
-
         <div>
             {#if $user_logged_in}
-                <Button
-                    outline
-                    pill
-                    color="transparent"
-                    class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
-                    onclick={() => window.history.back()}
-                    aria-label="Go back"
-                >
-                    Back
-                </Button>
-
-                <Button
-                    outline
-                    pill
-                    color="transparent"
-                    class="ml-4 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-600"
-                    onclick={() => window.history.forward()}
-                    aria-label="Go forward"
-                >
-                    Next
+                <Button outline pill color="orange" onclick={() => logout()}>
+                    Logout
                 </Button>
             {/if}
         </div>
