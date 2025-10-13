@@ -51,12 +51,6 @@
     let bookingSuccess = false;
     let bookingId: string | number | null = null;
 
-    const slots = [
-        { time: "08:00 AM", seats: 9, slot_name: "slot1" },
-        { time: "09:30 AM", seats: 29, slot_name: "slot2" },
-        { time: "11:00 AM", seats: 24, slot_name: "slot3" },
-    ];
-
     let slots_data: any = null;
 
     $: feePerPerson =
@@ -277,12 +271,6 @@
                     Selected: {authorityLetterFile.name}
                 </div>
             {/if}
-
-            <!-- Draft -->
-            <div class="draft-row">
-                <input id="draft" type="checkbox" bind:checked={saveAsDraft} />
-                <label for="draft" class="muted">Save as Draft</label>
-            </div>
 
             <!-- Totals -->
             <div class="muted small">Fee: {feePerPerson} | Total: {total}</div>

@@ -4,12 +4,14 @@
     import { Card, Button, Label, Input } from "flowbite-svelte";
     import { Badge } from "flowbite-svelte";
 
-    import { login_verify } from "@src/helper_devoteee.js";
+    import { user_logged_in } from "@src/store.js";
+
+    import { login_verify } from "@src/helper.js";
     import { toast } from "svelte-sonner";
 
     // phone as string to allow leading + / 0 etc
     export let phone = 0;
-    let password: string =  "Mpsedc123";
+    let password: string = "Mpsedc123";
     let loading: boolean = false;
 
     async function login(e: SubmitEvent) {
@@ -21,23 +23,18 @@
         if (json_data?.full_name) {
             toast.success("Login successful");
             await goto("/dashboard");
-
+            user_logged_in.set(true);
         } else {
             // show API message or generic error
             toast.error(json_data || "Login failed");
             loading = false;
         }
     }
-
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
     <Card class="w-full max-w-md p-10">
-        <form
-                class="space-y-4"
-                on:submit={login}
-                aria-busy={loading}
-        >
+        <form class="space-y-4" on:submit={login} aria-busy={loading}>
             <h2 class="text-xl font-semibold text-gray-800 flex justify-center">
                 Login
             </h2>
@@ -47,28 +44,33 @@
             <div>
                 <Label for="phone">Phone</Label>
                 <Input
-                        id="phone"
-                        type="text"
-                        bind:value={phone}
-                        placeholder="Phone"
-                        inputmode="tel"
-                        autocomplete="tel"
+                    id="phone"
+                    type="text"
+                    bind:value={phone}
+                    placeholder="Phone"
+                    inputmode="tel"
+                    autocomplete="tel"
                 />
             </div>
 
             <div>
                 <Label for="temp">Password</Label>
                 <Input
-                        id="temp"
-                        type="text"
-                        bind:value={password}
-                        placeholder="Enter password"
-                        disabled={loading}
+                    id="temp"
+                    type="text"
+                    bind:value={password}
+                    placeholder="Enter password"
+                    disabled={loading}
                 />
             </div>
 
             <div class="flex items-center justify-center">
-                <Button type="submit" disabled={loading} aria-disabled={loading} class="min-lg:w-7xl">
+                <Button
+                    type="submit"
+                    disabled={loading}
+                    aria-disabled={loading}
+                    class="min-lg:w-7xl"
+                >
                     {#if loading}Verifying...{:else}Login{/if}
                 </Button>
             </div>

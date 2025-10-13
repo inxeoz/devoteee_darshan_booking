@@ -7,37 +7,30 @@
     import { toast } from "svelte-sonner";
 
     // phone as string to allow leading + / 0 etc
-    let phone : number;
+    let phone: number;
     let loading: boolean = false;
 
     async function login(e: SubmitEvent) {
         e?.preventDefault();
-
 
         loading = true;
 
         const json_data = await registration_devoteee(phone);
 
         if (json_data?.message) {
-            toast.success("Login successful");
+            toast.success("Registration Success");
             await goto("/login");
-
         } else {
             // show API message or generic error
-            toast.error(json_data || "Login failed");
+            toast.error(json_data || "Registration failed");
             loading = false;
         }
     }
-
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
     <Card class="w-full max-w-md p-10">
-        <form
-                class="space-y-4"
-                on:submit={login}
-                aria-busy={loading}
-        >
+        <form class="space-y-4" on:submit={login} aria-busy={loading}>
             <h2 class="text-xl font-semibold text-gray-800 flex justify-center">
                 Registration
             </h2>
@@ -47,17 +40,22 @@
             <div>
                 <Label for="phone">Phone</Label>
                 <Input
-                        id="phone"
-                        type="text"
-                        bind:value={phone}
-                        placeholder="Enter your phone"
-                        inputmode="tel"
-                        autocomplete="tel"
+                    id="phone"
+                    type="text"
+                    bind:value={phone}
+                    placeholder="Enter your phone"
+                    inputmode="tel"
+                    autocomplete="tel"
                 />
             </div>
 
             <div class="flex items-center justify-center">
-                <Button type="submit" disabled={loading} aria-disabled={loading} class="min-lg:w-7xl">
+                <Button
+                    type="submit"
+                    disabled={loading}
+                    aria-disabled={loading}
+                    class="min-lg:w-7xl"
+                >
                     {#if loading}Verifying...{:else}Register{/if}
                 </Button>
             </div>

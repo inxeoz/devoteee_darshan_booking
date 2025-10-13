@@ -108,7 +108,8 @@
                                 <div class="text-xs text-slate-400 mt-1">
                                     {b.darshan_date}@
 
-                                    {b.darshan_time}
+                                    {b.slot_start_time} to
+                                    {b.slot_end_time}
                                 </div>
                             </div>
                             <div class="ml-4">

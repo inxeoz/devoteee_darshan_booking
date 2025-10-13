@@ -4,40 +4,7 @@ const COMMON =
 const VIP_BOOKING =
   "/api/method/mahakaal.darshan_booking.doctype.booking_slot.booking_slot.";
 
-export function getCookieByName(name: string): string | null {
-  const nameEQ = name + "=";
-  const cookies = document.cookie.split(";");
-  for (let cookie of cookies) {
-    cookie = cookie.trim();
-    if (cookie.indexOf(nameEQ) === 0) {
-      return cookie.substring(nameEQ.length);
-    }
-  }
-  return null;
-}
-
-export async function login_verify(phone: number, pwd: string) {
-  try {
-    const res = await fetch("/api/method/login", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        usr: phone + "",
-        pwd: pwd,
-      }),
-    });
-
-    const data = await res.json();
-    return data;
-  } catch (err: any) {
-    console.error(err);
-
-    return null;
-  }
-}
+import { user_logged_in } from "@src/store.js";
 
 export async function get_booking_slot_info(slot_date: string) {
   try {
@@ -188,29 +155,6 @@ export async function login_request_devoteee(phone: number) {
       },
       body: JSON.stringify({
         phone: phone,
-      }),
-    });
-
-    const data = await res.json();
-    return data;
-  } catch (err: any) {
-    console.error(err);
-
-    return null;
-  }
-}
-
-export async function login_devoteee(phone: number, pwd: string) {
-  try {
-    const res = await fetch("/api/method/login", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        usr: phone + "",
-        pwd: pwd,
       }),
     });
 

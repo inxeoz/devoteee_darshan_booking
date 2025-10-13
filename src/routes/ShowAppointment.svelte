@@ -101,15 +101,24 @@
                 <strong>Status:</strong>
 
                 <Badge
-                    color={data.workflow_state === "Rejected" ? "red" : "green"}
+                    color={data.workflow_state === "Approved"
+                        ? "green"
+                        : data.workflow_state === "Pending"
+                          ? "orange"
+                          : "red"}
                 >
                     {data.workflow_state ?? data.status ?? "—"}
                 </Badge>
             </div>
             <div><strong>Type:</strong> {data.darshan_type ?? "—"}</div>
             <div>
-                <strong>Date & Time:</strong>
-                {formatDateTime(data.darshan_date, data.darshan_time)}
+                <strong>Date:</strong>
+                {data.darshan_date}
+            </div>
+
+            <div>
+                <strong>Time:</strong>
+                {data.slot_start_time} to {data.slot_end_time}
             </div>
             <div>
                 <strong>With Protocol:</strong>
