@@ -155,7 +155,7 @@
                 <ul class="divide-y divide-gray-200 border rounded-md">
                     {#each data.companions as c}
                         <li class="flex justify-between items-center p-2">
-                            <div>
+                            <div class="left_column w-1/3">
                                 <div class="font-semibold text-gray-800">
                                     {c.companion_name ?? "Unknown"}
                                 </div>
@@ -163,8 +163,16 @@
                                     {c.companion_gender ?? ""}
                                 </div>
                             </div>
-                            <div class="text-gray-800 font-medium">
-                                {c.companion_phone ?? "—"}
+                            <div class="middle_column w-1/6">
+                                <div class="text-gray-800 font-medium">
+                                    Age {c.companion_age ?? "—"}
+                                </div>
+                            </div>
+                            <div class="right_column w-1/3">
+                                phone :
+                                <Badge color="green">
+                                    {c.companion_phone ?? "—"}
+                                </Badge>
                             </div>
                         </li>
                     {/each}
@@ -194,7 +202,3 @@
         <div class="text-center text-gray-500 py-6">No data available.</div>
     {/if}
 </Modal>
-
-<style>
-    /* keep your modal-specific styles if any; Flowbite provides the modal visuals */
-</style>
