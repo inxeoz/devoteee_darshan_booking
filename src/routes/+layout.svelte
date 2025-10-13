@@ -22,6 +22,7 @@
     import { get_logged_user, logout } from "@src/helper.js";
 
     onMount(async () => {
+        loading = true;
         await get_logged_user();
         loading = false;
     });

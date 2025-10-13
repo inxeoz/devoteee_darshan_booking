@@ -2,7 +2,7 @@ import { user_logged_in } from "@src/store.js";
 
 export async function get_logged_user() {
   try {
-    const res = await fetch("api/method/frappe.auth.get_logged_user", {
+    const res = await fetch("/api/method/frappe.auth.get_logged_user", {
       method: "POST",
       credentials: "include",
       headers: {
@@ -12,6 +12,8 @@ export async function get_logged_user() {
 
     const data = await res.json();
 
+    console.log(data);
+
     if (data?.message) {
       user_logged_in.set(true);
     } else {
@@ -20,15 +22,13 @@ export async function get_logged_user() {
 
     return data;
   } catch (err: any) {
-    console.error(err);
-
     return null;
   }
 }
 
 export async function logout() {
   try {
-    const res = await fetch("api/method/logout", {
+    const res = await fetch("/api/method/logout", {
       method: "POST",
       credentials: "include",
       headers: {
