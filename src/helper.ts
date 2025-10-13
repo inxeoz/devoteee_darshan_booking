@@ -1,3 +1,4 @@
+import { goto } from "$app/navigation";
 import { user_logged_in } from "@src/store.js";
 
 export async function get_logged_user() {
@@ -40,6 +41,8 @@ export async function logout() {
 
     console.log(data);
     user_logged_in.set(false);
+
+    goto("/");
 
     return data;
   } catch (err: any) {
