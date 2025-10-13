@@ -101,7 +101,11 @@
                 <strong>Status:</strong>
 
                 <Badge
-                    color={data.workflow_state === "Rejected" ? "red" : "green"}
+                    color={data.workflow_state === "Approved"
+                        ? "green"
+                        : data.workflow_state === "Pending"
+                          ? "orange"
+                          : "red"}
                 >
                     {data.workflow_state ?? data.status ?? "—"}
                 </Badge>
