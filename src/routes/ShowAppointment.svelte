@@ -147,10 +147,10 @@
                     {data.government_authority_letter}
                 </div>
             {/if}
-            {#if data.devoteee_profile}
+            {#if data.devoteee_name}
                 <div class="col-span-2">
-                    <strong>Devotee Profile:</strong>
-                    {data.devoteee_profile}
+                    <strong>Devoteee Name:</strong>
+                    {data.devoteee_name}
                 </div>
             {/if}
         </div>
