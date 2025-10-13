@@ -78,7 +78,7 @@
             government_authority_letter: authorityLetterFile
                 ? authorityLetterFile.name
                 : "",
-            darshan_type: "Vip Darshan",
+            appointment_type: "Vip Darshan",
             darshan_companion: companions.map((c) => ({
                 companion_name: c.name || "",
                 companion_phone: c.phone || "",
