@@ -117,13 +117,15 @@
                 <strong>Time:</strong>
                 {data.slot_start_time} to {data.slot_end_time}
             </div>
-            <div>
-                <strong>With Protocol:</strong>
-                {data.darshan_with_protocol ? "Yes" : "No"}
-            </div>
-            {#if data.protocol_rank}
+
+            {#if data.with_protocol}
+                <div>
+                    <strong>With Protocol:</strong>
+                    {data.with_protocol ? "Yes" : "No"}
+                </div>
                 <div><strong>Protocol Rank:</strong> {data.protocol_rank}</div>
             {/if}
+
             {#if data.government_authority_letter}
                 <div class="col-span-2">
                     <strong>Authority Letter:</strong>
