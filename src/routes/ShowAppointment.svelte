@@ -9,9 +9,6 @@
     export let appointmentId: string;
 
     export let fetchAppointmentCall: Function;
-    export let approveCall; // this will receive the function
-    export let rejectCall; // this will receive the function
-
     const dispatch = createEventDispatcher();
 
     let loading = false;
@@ -84,20 +81,6 @@
             space,
         );
     }
-
-    // return {
-    //     "appointment_id" : appointment_id,
-    //     "devoteee_name" : devoteee_doc.devoteee_name,
-    //     "appointment_type" : appointment.darshan_type,
-    //     "slot_start_time" : appointment.slot_start_time,
-    //     "slot_end_time" : appointment.slot_end_time,
-    //     "workflow_state" : appointment.workflow_state,
-    //     "appointment_date" : appointment.darshan_date,
-    //     "with_protocol" : appointment.darshan_with_protocol,
-    //     "protocol_rank" : appointment.protocol_rank,
-    //     "devoteee_profile_id" : devoteee_profile_id,
-    //     "companions" : appointment.darshan_companion
-    // }
 </script>
 
 <Modal bind:open title="Appointment Details" size="lg" onclose={handleClose}>
@@ -153,6 +136,15 @@
                     {data.devoteee_name}
                 </div>
             {/if}
+
+            {#if data.group_size}
+                <div class="col-span-2">
+                    <strong>Group Size:</strong>
+                    <Badge color="blue">
+                        {data.group_size ?? data.status ?? "—"}
+                    </Badge>
+                </div>
+            {/if}
         </div>
 
         <div class="mb-3">
@@ -199,29 +191,6 @@
     {:else}
         <div class="text-center text-gray-500 py-6">No data available.</div>
     {/if}
-
-    {#snippet footer()}
-        {#if workflow_state === "Pending" && user_type === "Approver"}
-            <div class="flex justify-end items-center w-full gap-8">
-                <Button
-                    color="primary"
-                    pill
-                    onclick={async () => {
-                        rejectCall(appointmentId);
-                        await fetchAppointment();
-                    }}>Reject</Button
-                >
-                <Button
-                    color="green"
-                    pill
-                    onclick={async () => {
-                        approveCall(appointmentId);
-                        await fetchAppointment();
-                    }}>Approve</Button
-                >
-            </div>
-        {/if}
-    {/snippet}
 </Modal>
 
 <style>
