@@ -45,12 +45,9 @@
     let selected_slot_end_time = "";
 
     let authorityLetterFile: File | null = null;
-    let saveAsDraft = true;
 
     let loading = false;
     let bookingSuccess = false;
-    let bookingId: string | number | null = null;
-
     let slots_data: any = null;
 
     $: feePerPerson =
@@ -87,11 +84,9 @@
                 companion_phone: c.phone || "",
                 companion_age: c.age ?? "",
             })),
-            save_as_draft: saveAsDraft,
         };
         try {
             const res = await create_appointment(details);
-            bookingId = res?.id ?? null;
             bookingSuccess = true;
         } catch (err) {
             console.error(err);

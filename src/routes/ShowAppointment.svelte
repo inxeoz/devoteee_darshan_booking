@@ -9,9 +9,6 @@
     export let appointmentId: string;
 
     export let fetchAppointmentCall: Function;
-    export let approveCall; // this will receive the function
-    export let rejectCall; // this will receive the function
-
     const dispatch = createEventDispatcher();
 
     let loading = false;
@@ -110,44 +107,55 @@
                     {data.workflow_state ?? data.status ?? "—"}
                 </Badge>
             </div>
-            <div><strong>Type:</strong> {data.darshan_type ?? "—"}</div>
+            <div><strong>Type:</strong> {data.appointment_type ?? "—"}</div>
             <div>
                 <strong>Date:</strong>
-                {data.darshan_date}
+                {data.appointment_date}
             </div>
 
             <div>
                 <strong>Time:</strong>
                 {data.slot_start_time} to {data.slot_end_time}
             </div>
-            <div>
-                <strong>With Protocol:</strong>
-                {data.darshan_with_protocol ? "Yes" : "No"}
-            </div>
-            {#if data.protocol_rank}
+
+            {#if data.with_protocol}
+                <div>
+                    <strong>With Protocol:</strong>
+                    {data.with_protocol ? "Yes" : "No"}
+                </div>
                 <div><strong>Protocol Rank:</strong> {data.protocol_rank}</div>
             {/if}
+
             {#if data.government_authority_letter}
                 <div class="col-span-2">
                     <strong>Authority Letter:</strong>
                     {data.government_authority_letter}
                 </div>
             {/if}
-            {#if data.devoteee_profile}
+            {#if data.devoteee_name}
                 <div class="col-span-2">
-                    <strong>Devotee Profile:</strong>
-                    {data.devoteee_profile}
+                    <strong>Devoteee Name:</strong>
+                    {data.devoteee_name}
+                </div>
+            {/if}
+
+            {#if data.group_size}
+                <div class="col-span-2">
+                    <strong>Group Size:</strong>
+                    <Badge color="blue">
+                        {data.group_size ?? data.status ?? "—"}
+                    </Badge>
                 </div>
             {/if}
         </div>
 
         <div class="mb-3">
             <h3 class="font-semibold mb-1">Companions</h3>
-            {#if Array.isArray(data.darshan_companion) && data.darshan_companion.length > 0}
+            {#if Array.isArray(data.companions) && data.companions.length > 0}
                 <ul class="divide-y divide-gray-200 border rounded-md">
-                    {#each data.darshan_companion as c}
+                    {#each data.companions as c}
                         <li class="flex justify-between items-center p-2">
-                            <div>
+                            <div class="left_column w-1/3">
                                 <div class="font-semibold text-gray-800">
                                     {c.companion_name ?? "Unknown"}
                                 </div>
@@ -155,8 +163,16 @@
                                     {c.companion_gender ?? ""}
                                 </div>
                             </div>
-                            <div class="text-gray-800 font-medium">
-                                {c.companion_phone ?? "—"}
+                            <div class="middle_column w-1/6">
+                                <div class="text-gray-800 font-medium">
+                                    Age {c.companion_age ?? "—"}
+                                </div>
+                            </div>
+                            <div class="right_column w-1/3">
+                                phone :
+                                <Badge color="green">
+                                    {c.companion_phone ?? "—"}
+                                </Badge>
                             </div>
                         </li>
                     {/each}
@@ -172,7 +188,7 @@
             <Button
                 color="light"
                 size="sm"
-                on:click={() => (showRaw = !showRaw)}
+                onclick={() => (showRaw = !showRaw)}
             >
                 {showRaw ? "Hide JSON" : "Show raw JSON"}
             </Button>
@@ -185,31 +201,4 @@
     {:else}
         <div class="text-center text-gray-500 py-6">No data available.</div>
     {/if}
-
-    {#snippet footer()}
-        {#if workflow_state === "Pending" && user_type === "Approver"}
-            <div class="flex justify-end items-center w-full gap-8">
-                <Button
-                    color="primary"
-                    pill
-                    onclick={async () => {
-                        rejectCall(appointmentId);
-                        await fetchAppointment();
-                    }}>Reject</Button
-                >
-                <Button
-                    color="green"
-                    pill
-                    onclick={async () => {
-                        approveCall(appointmentId);
-                        await fetchAppointment();
-                    }}>Approve</Button
-                >
-            </div>
-        {/if}
-    {/snippet}
 </Modal>
-
-<style>
-    /* keep your modal-specific styles if any; Flowbite provides the modal visuals */
-</style>
