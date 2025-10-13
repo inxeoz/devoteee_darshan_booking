@@ -39,7 +39,7 @@
     // State
     let selectedProtocolValue = "";
     let companions: { name: string; phone: string; age: number }[] = [];
-    let visitDate = "";
+    let appointment_date = "";
     let selectedSlotName = "";
     let selected_slot_start_time = "";
     let selected_slot_end_time = "";
@@ -65,11 +65,11 @@
     }
 
     async function submitBooking() {
-        // console.log("DTATE", visitDate);
+        // console.log("DTATE", appointment_date);
         loading = true;
 
         const details = {
-            darshan_date: visitDate,
+            appointment_date: appointment_date,
             slot_name: selectedSlotName,
             slot_start_time: selected_slot_start_time,
             slot_end_time: selected_slot_end_time,
@@ -226,8 +226,8 @@
             <input
                 class="input"
                 type="date"
-                bind:value={visitDate}
-                on:change={() => fetch_slot_info(visitDate)}
+                bind:value={appointment_date}
+                on:change={() => fetch_slot_info(appointment_date)}
             />
 
             <!-- Slots -->
