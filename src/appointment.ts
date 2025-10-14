@@ -22,6 +22,8 @@ export type Booking = {
   timeNote?: string; // e.g. "Flexible Time"
   darshan_companion?: Companion[];
   attender?: string | null;
+  slot_start_time: string;
+  slot_end_time: string;
 };
 
 // ---- Types ----
