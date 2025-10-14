@@ -52,7 +52,10 @@
     $: total = feePerPerson * (1 + companions.length);
 
     function addCompanion() {
-        companions = [...companions, { name: "", phone: "", age: 0 }];
+        companions = [
+            ...companions,
+            { name: "", phone: "", age: 0, gender: "male" },
+        ];
     }
     function removeCompanion(i: number) {
         companions = companions.filter((_, idx) => idx !== i);
@@ -71,6 +74,7 @@
                 companion_name: c.name,
                 companion_phone: c.phone,
                 companion_age: c.age,
+                companion_gender: c.gender,
             })),
         };
         try {
