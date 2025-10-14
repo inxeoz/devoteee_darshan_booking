@@ -92,7 +92,7 @@
         authorityLetterFile = input.files?.[0] ?? null;
     }
     function slotClass(s) {
-        return `${selectedSlotName === s.slot_name ? "border-blue-600 ring-2 ring-blue-200" : "border-gray-300"} ${
+        return `${selectedSlotName === s.slot_name ? "border-blue-600 ring-2 ring-blue-200 bg-blue-500" : "border-gray-300"} ${
             s.seats === 0 ? "opacity-50 cursor-not-allowed" : ""
         }`;
     }
@@ -243,9 +243,9 @@
             >
             <div class="grid grid-cols-3 gap-3">
                 {#each slots_data as s}
-                    <Button
+                    <button
                         class={`grid gap-1 hover:bg-green-200 content-center justify-items-center h-20 border rounded-lg bg-white transition ${slotClass(s)}`}
-                        onclick={() =>
+                        on:click={() =>
                             select_slot(
                                 s.slot_name,
                                 s.slot_start_time,
@@ -261,7 +261,7 @@
                         <div class="text-green-600 text-sm">
                             {s.slot_capacity} Seats
                         </div>
-                    </Button>
+                    </button>
                 {/each}
             </div>
 
