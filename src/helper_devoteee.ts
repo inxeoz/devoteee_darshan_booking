@@ -8,7 +8,7 @@ import { user_logged_in } from "@src/store.js";
 
 export async function get_booking_slot_info(slot_date: string) {
   try {
-    const res = await fetch(VIP_BOOKING + "get_slot_occupancy_info", {
+    const res = await fetch(COMMON + "get_slot_occupancy_info", {
       method: "POST",
       credentials: "include",
       headers: {
