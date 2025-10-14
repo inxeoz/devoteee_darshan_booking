@@ -91,6 +91,14 @@
     {:else if data}
         <div class="grid grid-cols-2 gap-3 mb-4">
             <div>
+                <strong>Primary Devotee:</strong>
+
+                <Badge color="green">
+                    {data.primary_devoteee_name ?? "—"}
+                </Badge>
+            </div>
+
+            <div>
                 <strong>Appointment ID:</strong>
                 {data.name ?? data.appointment_id ?? "—"}
             </div>
