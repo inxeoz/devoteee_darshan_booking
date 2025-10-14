@@ -197,6 +197,14 @@
                                 placeholder="Phone"
                                 bind:value={companions[i].phone}
                             />
+
+                            <input
+                                class="border border-gray-300 rounded-lg p-2"
+                                type="number"
+                                placeholder="Age"
+                                bind:value={companions[i].age}
+                            />
+
                             <select
                                 id="gender-select"
                                 class="rounded-lg lg:min-w-5"
@@ -205,13 +213,6 @@
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
                             </select>
-
-                            <input
-                                class="border border-gray-300 rounded-lg p-2"
-                                type="number"
-                                placeholder="Age"
-                                bind:value={companions[i].age}
-                            />
                         </div>
                         <button
                             type="button"
