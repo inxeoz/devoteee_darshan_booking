@@ -4,7 +4,6 @@
     import { formatDateTime } from "@src/utils.js";
 
     let workflow_state = "Demo";
-    let user_type: string;
 
     export let appointmentId: string;
 
@@ -55,9 +54,6 @@
     }
 
     onMount(() => {
-        user_type = localStorage.getItem("Muser_type") || "";
-
-        console.log("usudu", user_type);
         fetchAppointment();
         window.addEventListener("keydown", onKeydown);
     });
