@@ -3,11 +3,12 @@
     import { Button, Modal, Badge } from "flowbite-svelte";
     import { formatDateTime } from "@src/utils.js";
 
+    import { get_appointment } from "@src/helper_devoteee.js";
+
     let workflow_state = "Demo";
 
     export let appointmentId: string;
 
-    export let fetchAppointmentCall: Function;
     const dispatch = createEventDispatcher();
 
     let loading = false;
@@ -25,7 +26,7 @@
         loading = true;
         error = null;
         try {
-            const payload = await fetchAppointmentCall(appointmentId);
+            const payload = await get_appointment(appointmentId);
             data = payload?.message ?? payload;
             workflow_state = data.workflow_state;
         } catch (err: any) {
