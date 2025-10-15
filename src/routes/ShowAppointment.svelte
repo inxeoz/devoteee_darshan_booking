@@ -126,10 +126,10 @@
                 {data.slot_start_time} to {data.slot_end_time}
             </div>
 
-            {#if data.with_protocol}
+            {#if data.darshan_with_protocol}
                 <div>
                     <strong>With Protocol:</strong>
-                    {data.with_protocol ? "Yes" : "No"}
+                    {data.darshan_with_protocol ? "Yes" : "No"}
                 </div>
                 <div><strong>Protocol Rank:</strong> {data.protocol_rank}</div>
             {/if}
@@ -159,9 +159,9 @@
 
         <div class="mb-3">
             <h3 class="font-semibold mb-1">Companions</h3>
-            {#if Array.isArray(data.companions) && data.companions.length > 0}
+            {#if Array.isArray(data.darshan_companion) && data.darshan_companion.length > 0}
                 <ul class="divide-y divide-gray-200 border rounded-md">
-                    {#each data.companions as c}
+                    {#each data.darshan_companion as c}
                         <li class="flex justify-between items-center p-2">
                             <div class="w-1/3">
                                 <div class="font-semibold text-gray-800">
