@@ -43,9 +43,7 @@ export async function get_self_profile() {
 
     return data?.message?.profile;
   } catch (err) {
-    console.error("Error fetching profile details:", err);
-
-    return null;
+    return err;
   }
 }
 
