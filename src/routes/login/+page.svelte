@@ -25,8 +25,7 @@
             await goto("/dashboard");
             user_logged_in.set(true);
         } else {
-            // show API message or generic error
-            toast.error(json_data || "Login failed");
+            toast.error("Login failed " + JSON.stringify(json_data));
             loading = false;
         }
     }

@@ -19,6 +19,7 @@ export async function get_logged_user() {
       user_logged_in.set(true);
     } else {
       user_logged_in.set(false);
+      await logout();
     }
 
     return data;
