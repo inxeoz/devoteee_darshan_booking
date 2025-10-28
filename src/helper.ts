@@ -81,18 +81,17 @@ export async function login_verify(phone: number, pwd: string) {
 }
 
 
-export async function get_auth_token(phone: number, pwd: string) {
+export async function get_auth_token(phone: number) {
   try {
-     const url  = "http://127.0.0.1:8001/api/method/mahakaal.darshan_booking.doctype.session_login.session_login."
-    const res = await fetch(`${API_BASE}/api/method/login`, {
+     const url  = "http://127.0.0.1:8001/api/method/mahakaal.darshan_booking.doctype.session_login.session_login.get_auth_token"
+     const res = await fetch(url, {
       method: "POST",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        usr: phone + "",
-        pwd: pwd,
+         "phone" : phone + ""
       }),
     });
 
