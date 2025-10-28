@@ -2,7 +2,7 @@ import { auth_token, user_logged_in } from "@src/store.js";
 import { get } from "svelte/store";
 
 // Automatically switch between local proxy & production backend
-const API_BASE = import.meta.env.PROD ? import.meta.env.VITE_TARGET : "";
+const API_BASE = import.meta.env.PROD ? import.meta.env.VITE_TARGET : "http://10.120.11.169:8001";
 
 // Common endpoints
 const COMMON = `${API_BASE}/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.`;

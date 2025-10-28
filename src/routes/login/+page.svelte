@@ -6,7 +6,7 @@
 
     import { user_logged_in } from "@src/store.js";
 
-    import { login_verify } from "@src/helper.js";
+    import { get_auth_token } from "@src/helper.js";
     import { toast } from "svelte-sonner";
 
     // phone as string to allow leading + / 0 etc
@@ -18,9 +18,9 @@
         e?.preventDefault();
         loading = true;
 
-        const json_data = await login_verify(phone, password);
+        const json_data = await get_auth_token(phone);
 
-        if (json_data?.full_name) {
+        if (json_data?.message) {
             toast.success("Login successful");
             await goto("/dashboard");
             user_logged_in.set(true);

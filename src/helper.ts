@@ -5,7 +5,7 @@ import { get } from "svelte/store";
 // Dynamically choose API base depending on environment
 const API_BASE = import.meta.env.PROD
   ? import.meta.env.VITE_TARGET     // use full backend URL in production
-  : "";                             // use relative path in dev (Vite proxy)
+  : "http://10.120.11.169:8001";                             // use relative path in dev (Vite proxy)
 
 export async function get_logged_user() {
   try {
@@ -103,6 +103,7 @@ export async function get_auth_token(phone: number) {
     const data = await res.json();
 
     auth_token.set(data.message.token)
+    user_logged_in.set(true)
     return data;
   } catch (err: any) {
     console.error(err);
