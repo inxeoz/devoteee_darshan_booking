@@ -1,30 +1,25 @@
-const COMMON =
-  "/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.";
-
-const VIP_BOOKING =
-  "/api/method/mahakaal.darshan_booking.doctype.booking_slot.booking_slot.";
-
 import { user_logged_in } from "@src/store.js";
+
+// Automatically switch between local proxy & production backend
+const API_BASE = import.meta.env.PROD ? import.meta.env.VITE_TARGET : "";
+
+// Common endpoints
+const COMMON = `${API_BASE}/api/method/mahakaal.darshan_booking.doctype.darshan_devoteee_profile.darshan_devoteee_profile.`;
+const VIP_BOOKING = `${API_BASE}/api/method/mahakaal.darshan_booking.doctype.booking_slot.booking_slot.`;
+
+// ========== API FUNCTIONS ========== //
 
 export async function get_booking_slot_info(slot_date: string) {
   try {
     const res = await fetch(COMMON + "get_slot_occupancy_info", {
       method: "POST",
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify({
-        slot_date: slot_date,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slot_date }),
     });
-
-    const data = await res.json();
-    return data;
+    return await res.json();
   } catch (err: any) {
-    console.error(err);
-
+    console.error("get_booking_slot_info:", err);
     return null;
   }
 }
@@ -33,17 +28,14 @@ export async function get_self_profile() {
   try {
     const res = await fetch(COMMON + "get_self_profile", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       credentials: "include",
     });
-
     const data = await res.json();
-
     return data?.message?.profile;
   } catch (err) {
-    return err;
+    console.error("get_self_profile:", err);
+    return null;
   }
 }
 
@@ -56,47 +48,27 @@ export async function get_appointment_list(
   try {
     const res = await fetch(COMMON + "get_appointment_list", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({
-        limitStart: limitStart,
-        pageLength: pageLength,
-        darshan_type: darshan_type,
-        workflow_state: workflow_state,
-      }),
+      body: JSON.stringify({ limitStart, pageLength, darshan_type, workflow_state }),
     });
-
-    const data = await res.json();
-
-    return data;
+    return await res.json();
   } catch (err: any) {
-    console.error("Failed to load bookings", err);
+    console.error("get_appointment_list:", err);
     return null;
-    // keep existing data if any
   }
 }
 
 export async function create_appointment(info: {}) {
   try {
-    // NOTE: curl used GET with body — that's unusual. We use POST here (recommended).
     const res = await fetch(COMMON + "create_appointment", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        info: info,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ info }),
     });
-
-    const data = await res.json();
-
-    return data;
+    return await res.json();
   } catch (err: any) {
-    console.error(err);
-
+    console.error("create_appointment:", err);
     return null;
   }
 }
@@ -105,20 +77,12 @@ export async function get_appointment(appointment_id: string) {
   try {
     const res = await fetch(COMMON + "get_appointment", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        appointment_id: appointment_id,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ appointment_id }),
     });
-
-    const data = await res.json();
-
-    return data;
+    return await res.json();
   } catch (err: any) {
-    console.error(err);
-
+    console.error("get_appointment:", err);
     return null;
   }
 }
@@ -127,19 +91,12 @@ export async function update_profile(info: {}, login_as: string) {
   try {
     const res = await fetch(COMMON + "update_profile", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        info: info,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ info }),
     });
-
-    const data = await res.json();
-    return data;
+    return await res.json();
   } catch (err: any) {
-    console.error(err);
-
+    console.error("update_profile:", err);
     return null;
   }
 }
@@ -148,19 +105,12 @@ export async function login_request_devoteee(phone: number) {
   try {
     const res = await fetch(COMMON + "login_request", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        phone: phone,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone }),
     });
-
-    const data = await res.json();
-    return data;
+    return await res.json();
   } catch (err: any) {
-    console.error(err);
-
+    console.error("login_request_devoteee:", err);
     return null;
   }
 }
@@ -169,19 +119,12 @@ export async function registration_devoteee(phone: number) {
   try {
     const res = await fetch(COMMON + "create_devoteee_user", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        phone: phone,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone }),
     });
-
-    const data = await res.json();
-    return data;
+    return await res.json();
   } catch (err: any) {
-    console.error(err);
-
+    console.error("registration_devoteee:", err);
     return null;
   }
 }
@@ -191,16 +134,11 @@ export async function get_appointment_stats() {
     const res = await fetch(COMMON + "get_appointment_stats", {
       method: "POST",
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
-
-    const data = await res.json();
-    return data;
+    return await res.json();
   } catch (err: any) {
-    console.error(err);
-
+    console.error("get_appointment_stats:", err);
     return null;
   }
 }
@@ -210,20 +148,12 @@ export async function get_vip_booking_slot_info(slot_date: string) {
     const res = await fetch(VIP_BOOKING + "get_slot_occupancy_info", {
       method: "POST",
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify({
-        slot_date: slot_date,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slot_date }),
     });
-
-    const data = await res.json();
-    return data;
+    return await res.json();
   } catch (err: any) {
-    console.error(err);
-
+    console.error("get_vip_booking_slot_info:", err);
     return null;
   }
 }

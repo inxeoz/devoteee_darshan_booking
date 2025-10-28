@@ -1,23 +1,33 @@
-# Use Node.js 20 Alpine as base image
-FROM node:20-alpine
-
-# Set working directory
+# Stage 1 — Build
+FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy source code
 COPY . .
 
-# Build the application
-RUN npx vite build
+# Copy environment
+COPY .env.production ./
 
-# Expose the port the app runs on
+ENV NODE_ENV=production
+
+RUN npm run build
+
+
+
+# Stage 2 — Run
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy built app
+COPY --from=build /app/build ./build
+COPY --from=build /app/package*.json ./
+
+# Install only production dependencies (skip dev)
+RUN npm install --omit=dev
+
 EXPOSE 3000
-
-# Start the application
-CMD ["node", "build/index.js"]
+CMD ["node", "build"]
