@@ -1,4 +1,5 @@
-import { user_logged_in } from "@src/store.js";
+import { auth_token, user_logged_in } from "@src/store.js";
+import { get } from "svelte/store";
 
 // Automatically switch between local proxy & production backend
 const API_BASE = import.meta.env.PROD ? import.meta.env.VITE_TARGET : "";
@@ -14,7 +15,10 @@ export async function get_booking_slot_info(slot_date: string) {
     const res = await fetch(COMMON + "get_slot_occupancy_info", {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" , 
+         "Authorization" : get(auth_token)
+
+      },
       body: JSON.stringify({ slot_date }),
     });
     return await res.json();
@@ -28,7 +32,7 @@ export async function get_self_profile() {
   try {
     const res = await fetch(COMMON + "get_self_profile", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" ,  "Authorization" : get(auth_token)},
       credentials: "include",
     });
     const data = await res.json();
@@ -48,7 +52,7 @@ export async function get_appointment_list(
   try {
     const res = await fetch(COMMON + "get_appointment_list", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" ,  "Authorization" : get(auth_token)},
       credentials: "include",
       body: JSON.stringify({ limitStart, pageLength, darshan_type, workflow_state }),
     });
@@ -63,7 +67,7 @@ export async function create_appointment(info: {}) {
   try {
     const res = await fetch(COMMON + "create_appointment", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" , "Authorization" : get(auth_token)},
       body: JSON.stringify({ info }),
     });
     return await res.json();
@@ -77,7 +81,7 @@ export async function get_appointment(appointment_id: string) {
   try {
     const res = await fetch(COMMON + "get_appointment", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json",  "Authorization" : get(auth_token) },
       body: JSON.stringify({ appointment_id }),
     });
     return await res.json();
@@ -91,7 +95,7 @@ export async function update_profile(info: {}, login_as: string) {
   try {
     const res = await fetch(COMMON + "update_profile", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json",  "Authorization" : get(auth_token)},
       body: JSON.stringify({ info }),
     });
     return await res.json();
@@ -105,7 +109,7 @@ export async function login_request_devoteee(phone: number) {
   try {
     const res = await fetch(COMMON + "login_request", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" , "Authorization" : get(auth_token)},
       body: JSON.stringify({ phone }),
     });
     return await res.json();
@@ -119,7 +123,7 @@ export async function registration_devoteee(phone: number) {
   try {
     const res = await fetch(COMMON + "create_devoteee_user", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" ,  "Authorization" : get(auth_token)},
       body: JSON.stringify({ phone }),
     });
     return await res.json();
@@ -134,7 +138,7 @@ export async function get_appointment_stats() {
     const res = await fetch(COMMON + "get_appointment_stats", {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json",  "Authorization" : get(auth_token) },
     });
     return await res.json();
   } catch (err: any) {
@@ -148,7 +152,7 @@ export async function get_vip_booking_slot_info(slot_date: string) {
     const res = await fetch(VIP_BOOKING + "get_slot_occupancy_info", {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" ,  "Authorization" : get(auth_token)},
       body: JSON.stringify({ slot_date }),
     });
     return await res.json();
