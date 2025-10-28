@@ -14,7 +14,6 @@ export async function get_booking_slot_info(slot_date: string) {
   try {
     const res = await fetch(COMMON + "get_slot_occupancy_info", {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" , 
          "Authorization" : get(auth_token)
 
@@ -33,7 +32,7 @@ export async function get_self_profile() {
     const res = await fetch(COMMON + "get_self_profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" ,  "Authorization" : get(auth_token)},
-      credentials: "include",
+     
     });
     const data = await res.json();
     return data?.message?.profile;
@@ -53,7 +52,7 @@ export async function get_appointment_list(
     const res = await fetch(COMMON + "get_appointment_list", {
       method: "POST",
       headers: { "Content-Type": "application/json" ,  "Authorization" : get(auth_token)},
-      credentials: "include",
+     
       body: JSON.stringify({ limitStart, pageLength, darshan_type, workflow_state }),
     });
     return await res.json();
@@ -137,7 +136,7 @@ export async function get_appointment_stats() {
   try {
     const res = await fetch(COMMON + "get_appointment_stats", {
       method: "POST",
-      credentials: "include",
+     
       headers: { "Content-Type": "application/json",  "Authorization" : get(auth_token) },
     });
     return await res.json();
@@ -151,7 +150,7 @@ export async function get_vip_booking_slot_info(slot_date: string) {
   try {
     const res = await fetch(VIP_BOOKING + "get_slot_occupancy_info", {
       method: "POST",
-      credentials: "include",
+     
       headers: { "Content-Type": "application/json" ,  "Authorization" : get(auth_token)},
       body: JSON.stringify({ slot_date }),
     });

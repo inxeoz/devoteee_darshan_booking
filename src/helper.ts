@@ -12,7 +12,7 @@ export async function get_logged_user() {
 
     const res = await fetch(`${API_BASE}/api/method/frappe.auth.get_logged_user`, {
       method: "POST",
-      credentials: "include",
+     
       headers: {
         "Content-Type": "application/json",
         "Authorization" : get(auth_token)
@@ -40,7 +40,7 @@ export async function logout() {
   try {
     const res = await fetch(`${API_BASE}/api/method/logout`, {
       method: "POST",
-      credentials: "include",
+     
       headers: {
         "Content-Type": "application/json",
          "Authorization" : get(auth_token)
@@ -66,7 +66,7 @@ export async function login_verify(phone: number, pwd: string) {
   try {
     const res = await fetch(`${API_BASE}/api/method/login`, {
       method: "POST",
-      credentials: "include",
+     
       headers: {
         "Content-Type": "application/json",
          "Authorization" : get(auth_token)
@@ -91,7 +91,7 @@ export async function get_auth_token(phone: number) {
      const url  = `${API_BASE}/api/method/mahakaal.darshan_booking.doctype.session_login.session_login.get_auth_token`
      const res = await fetch(url, {
       method: "POST",
-      credentials: "include",
+     
       headers: {
         "Content-Type": "application/json",
       },
