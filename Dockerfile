@@ -2,6 +2,9 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
+ARG VITE_TARGET
+ENV VITE_TARGET=$VITE_TARGET
+
 COPY package*.json ./
 RUN npm install
 
