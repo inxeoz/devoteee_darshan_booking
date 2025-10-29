@@ -2,7 +2,7 @@ import { auth_token, user_logged_in } from "@src/store.js";
 import { get } from "svelte/store";
 
 const isProd = import.meta.env.PROD;
-const API_BASE = import.meta.env.VITE_API_BASE;
+const API_BASE = import.meta.env.VITE_TARGET;
 console.log(`Running in ${isProd ? 'production' : 'development'} mode with API_BASE=${API_BASE}`);
 
 
