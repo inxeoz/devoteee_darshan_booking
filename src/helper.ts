@@ -2,10 +2,10 @@ import { goto } from "$app/navigation";
 import { user_logged_in , auth_token} from "@src/store.js";
 import { get } from "svelte/store";
 
-// Dynamically choose API base depending on environment
-const API_BASE = import.meta.env.PROD
-  ? import.meta.env.VITE_TARGET     // use full backend URL in production
-  : "http://10.120.11.169:8001";                             // use relative path in dev (Vite proxy)
+const isProd = import.meta.env.PROD;
+const API_BASE = import.meta.env.VITE_API_BASE;
+console.log(`Running in ${isProd ? 'production' : 'development'} mode with API_BASE=${API_BASE}`);
+                         // use relative path in dev (Vite proxy)
 
 export async function get_logged_user() {
   try {
