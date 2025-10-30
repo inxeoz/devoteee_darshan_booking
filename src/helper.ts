@@ -2,8 +2,8 @@ import { goto } from "$app/navigation";
 import { user_logged_in , auth_token} from "@src/store.js";
 import { get } from "svelte/store";
 
-const isProd = import.meta.env.PROD;
-const API_BASE = import.meta.env.VITE_TARGET;
+import { API_BASE, isProd } from '$lib/env.js';
+
 console.log(`Running in ${isProd ? 'production' : 'development'} mode with API_BASE=${API_BASE}`);
                          // use relative path in dev (Vite proxy)
 

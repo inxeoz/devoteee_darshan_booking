@@ -10,8 +10,7 @@
     import { toast } from "svelte-sonner";
 
 
-export const env = window.__ENV__ || {};
-console.log(env.API_URL);
+
 
     // phone as string to allow leading + / 0 etc
     export let phone = 0;
